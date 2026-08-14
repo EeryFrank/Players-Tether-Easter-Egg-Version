@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "qizhang.playerleash.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "PlayerLeashMixin"
+  ],
+  "client": [
+    "client.PlayerRendererMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
