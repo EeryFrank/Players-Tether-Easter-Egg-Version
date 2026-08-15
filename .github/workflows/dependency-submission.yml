@@ -24,3 +24,9 @@ jobs:
 
       - name: Generate and submit dependency graph
         uses: gradle/actions/dependency-submission@v6
+        with:
+          # The published mod contains only dependencies explicitly embedded
+          # through NeoForge's jar-in-jar configuration. Excluding the
+          # Minecraft/NeoForge development classpaths prevents their runtime
+          # libraries from being attributed to this mod artifact.
+          dependency-graph-include-configurations: '^jarJar$'
