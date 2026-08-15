@@ -2,18 +2,26 @@
 
 ![Player's Tether_Easter Egg Version icon](docs/assets/players_tether_icon.png)
 
-A Minecraft 1.21.1 NeoForge mod that lets players leash other players with a normal lead. It includes directional server rules and a six-layer taming easter egg.
+A Minecraft 1.20.1/1.21.1 mod that lets players leash other players with a normal lead. Fabric, NeoForge, and Forge builds are published separately. The mod includes directional server rules and a six-layer taming easter egg.
 
 Author: **QiZhang**
 
 License: **MIT**
 
-## Requirements
+## Supported targets
 
-- Minecraft 1.21.1
-- NeoForge 21.1.244 to 21.1.x
-- Java 21
-- Install the same JAR on the dedicated server and every client
+| Minecraft | Loader build target | Java | Release status |
+| --- | --- | ---: | --- |
+| 1.21.1 | Fabric Loader 0.19.3 + Fabric API 0.116.15 | 21 | Supported |
+| 1.21.1 | NeoForge 21.1.244 | 21 | Supported |
+| 1.21.1 | Forge 52.1.0 | 21 | Supported |
+| 1.20.1 | Fabric Loader 0.19.3 + Fabric API 0.92.11 | 17 | Supported |
+| 1.20.1 | NeoForge 47.1.106 legacy line | 17 | Experimental |
+| 1.20.1 | Forge 47.4.10 | 17 | Supported |
+
+Install the JAR whose filename exactly matches the Minecraft version and loader on the dedicated server and every client. The six JARs are not interchangeable.
+
+NeoForge 1.20.1 was a short-lived Forge-compatible line that is no longer maintained upstream. Its build is provided for legacy installations and must not be treated as modern NeoForge support.
 
 ## Player controls
 
@@ -72,13 +80,20 @@ Rules are stored per world in:
 
 ## Building
 
-Use the included Gradle wrapper and Java 21:
+Use the included Gradle wrapper with a Java 21 build JVM. Gradle automatically selects Java 17 for the 1.20.1 compilation and run tasks:
 
 ```powershell
-.\gradlew.bat clean build
+.\gradlew.bat --no-daemon --console=plain clean buildAll collectReleaseJars
+pwsh -NoProfile -File .\tools\Verify-Release.ps1
 ```
 
-The verification lifecycle also runs a deterministic rule-store and taming-schedule self-test. The built JAR is written to `build/libs/`.
+The verification lifecycle runs deterministic rule-store and taming-schedule self-tests for every target. Six production JARs and `SHA256SUMS.txt` are written to `build/release/`.
+
+To build only one target, for example Fabric 1.20.1:
+
+```powershell
+.\gradlew.bat :fabric-1.20.1:build
+```
 
 ## Dependencies and code relationships
 
@@ -86,12 +101,12 @@ The complete external dependency graph, server/client boundary, and internal com
 
 ## Validation status
 
-Automated validation covers compilation, resource/JAR inspection, the rule-store and timing schedule, full startup and clean shutdown on NeoForge 21.1.244, direct-console rule commands, and RCON denial.
+Automated validation covers all six compilations, deterministic self-tests, loader metadata, Mixin/refmap presence, resource-pack formats, Java class versions, and release checksums. Dedicated-server smoke tests reached `Done` and shut down cleanly on all six targets; the 1.20.1 targets also reported Java 17 and accepted the direct-console status command.
 
-The final player-to-player interaction feel, lead rendering, wolf replacement, and heart appearance still require two real clients for visual/gameplay acceptance on a new environment.
+`NEEDS_MANUAL_VALIDATION`: two real clients are still required to accept player-to-player synchronization, pulling/break distance, lead rendering, wolf replacement, and heart appearance. This is especially important for the custom 1.20.1 tether renderer.
 
 ## 中文简介
 
-该模组允许玩家使用原版拴绳拴住其他玩家。默认全员可用，权限 4 管理员或本地控制台可以设置定向允许/禁止规则。连续被拴住 105 秒会叠满 6 层“驯服”：第 3 层起显示为原版狼，第 6 层持续冒爱心。服务端与所有客户端都必须安装。
+该模组允许玩家使用原版拴绳拴住其他玩家，提供 Minecraft 1.20.1/1.21.1 的 Fabric、NeoForge、Forge 六个独立 JAR。默认全员可用，权限 4 管理员或本地控制台可以设置定向允许/禁止规则。连续被拴住 105 秒会叠满 6 层“驯服”：第 3 层起显示为原版狼，第 6 层持续冒爱心。服务端与所有客户端必须安装同版本、同加载器的 JAR。
 
 完整中文安装和管理说明见 [docs/README_zh_CN.md](docs/README_zh_CN.md)。
