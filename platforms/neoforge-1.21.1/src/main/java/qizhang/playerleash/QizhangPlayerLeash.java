@@ -12,6 +12,7 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
+import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
@@ -22,7 +23,7 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 @Mod(QizhangPlayerLeash.MOD_ID)
 public final class QizhangPlayerLeash {
     public static final String MOD_ID = "qizhang_player_leash";
-    public static final String VERSION = "1.1.0";
+    public static final String VERSION = "1.1.2";
 
     private static final DeferredRegister<MobEffect> EFFECTS =
             DeferredRegister.create(Registries.MOB_EFFECT, MOD_ID);
@@ -34,6 +35,7 @@ public final class QizhangPlayerLeash {
         EFFECTS.register(modBus);
         NeoForge.EVENT_BUS.addListener(RegisterCommandsEvent.class, this::onRegisterCommands);
         NeoForge.EVENT_BUS.addListener(PlayerInteractEvent.EntityInteract.class, this::onEntityInteract);
+        NeoForge.EVENT_BUS.addListener(LivingDeathEvent.class, this::onLivingDeath);
         NeoForge.EVENT_BUS.addListener(PlayerEvent.PlayerLoggedOutEvent.class, this::onPlayerLoggedOut);
         NeoForge.EVENT_BUS.addListener(PlayerEvent.PlayerChangedDimensionEvent.class, this::onPlayerChangedDimension);
         NeoForge.EVENT_BUS.addListener(ServerTickEvent.Post.class, this::onServerTick);
@@ -86,6 +88,12 @@ public final class QizhangPlayerLeash {
     private void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             MANAGER.releaseInvolving(player, true, "玩家离线，拴绳已解除。");
+        }
+    }
+
+    private void onLivingDeath(LivingDeathEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player) {
+            MANAGER.releaseInvolving(player, true, "玩家死亡，拴绳已解除。");
         }
     }
 

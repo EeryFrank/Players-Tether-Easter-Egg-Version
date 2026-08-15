@@ -18,6 +18,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Leashable;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.storage.LevelResource;
 import org.slf4j.Logger;
 
@@ -75,8 +76,9 @@ final class PlayerLeashManager {
         target.sendSystemMessage(Component.literal(
                 holder.getGameProfile().getName() + " 用拴绳拴住了你。")
                 .withStyle(ChatFormatting.GOLD));
-        LOGGER.info("[七章玩家拴绳] {} -> {} attached (leadConsumed={})",
-                holder.getGameProfile().getName(), target.getGameProfile().getName(), consumed);
+        LOGGER.info("[七章玩家拴绳] {} -> {} attached (leadConsumed={}, distance={})",
+                holder.getGameProfile().getName(), target.getGameProfile().getName(), consumed,
+                String.format(java.util.Locale.ROOT, "%.2f", holder.distanceTo(target)));
         return true;
     }
 
@@ -88,8 +90,7 @@ final class PlayerLeashManager {
         Leashable leashable = (Leashable) (Object) target;
         Entity holder = leashable.getLeashHolder();
         if (holder == null) {
-            consumedLeadByTarget.remove(target.getUUID());
-            return false;
+            return settleVanillaClearedLeash(target, requestLeadDrop, message);
         }
         String holderName = holder.getName().getString();
         leashable.dropLeash(broadcast, requestLeadDrop);
@@ -213,9 +214,38 @@ final class PlayerLeashManager {
     }
 
     synchronized boolean consumeDropDecision(ServerPlayer target, boolean requestedDrop) {
+        if (!requestedDrop) {
+            // Dimension transfer clears vanilla's LeashData before the platform's
+            // after-change event. Preserve the consumption decision so that event
+            // can still refund a survival lead without creating one for creative.
+            tamingProgressByTarget.remove(target.getUUID());
+            return false;
+        }
         Boolean consumed = consumedLeadByTarget.remove(target.getUUID());
         tamingProgressByTarget.remove(target.getUUID());
-        return requestedDrop && (consumed == null || consumed);
+        return consumed == null || consumed;
+    }
+
+    private boolean settleVanillaClearedLeash(
+            ServerPlayer target,
+            boolean requestLeadDrop,
+            String message) {
+        Boolean consumed = consumedLeadByTarget.remove(target.getUUID());
+        tamingProgressByTarget.remove(target.getUUID());
+        if (consumed == null) {
+            return false;
+        }
+
+        boolean actualDrop = requestLeadDrop && consumed;
+        if (actualDrop && !target.level().isClientSide()) {
+            target.spawnAtLocation(Items.LEAD);
+        }
+        if (message != null && !message.isBlank()) {
+            target.sendSystemMessage(Component.literal(message).withStyle(ChatFormatting.YELLOW));
+        }
+        LOGGER.info("[七章玩家拴绳] vanilla-cleared -> {} released (leadDropped={})",
+                target.getGameProfile().getName(), actualDrop);
+        return true;
     }
 
     synchronized void stop(MinecraftServer currentServer) {

@@ -3,6 +3,7 @@ package qizhang.playerleash;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerEntityWorldChangeEvents;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
@@ -18,7 +19,7 @@ import net.minecraft.world.item.Items;
 
 public final class QizhangPlayerLeash implements ModInitializer {
     public static final String MOD_ID = "qizhang_player_leash";
-    public static final String VERSION = "1.1.0";
+    public static final String VERSION = "1.1.2";
 
     private static final PlayerLeashManager MANAGER = new PlayerLeashManager();
     private static MobEffect tamedEffect;
@@ -53,6 +54,11 @@ public final class QizhangPlayerLeash implements ModInitializer {
         });
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) ->
                 MANAGER.releaseInvolving(handler.getPlayer(), true, "玩家离线，拴绳已解除。"));
+        ServerLivingEntityEvents.AFTER_DEATH.register((entity, damageSource) -> {
+            if (entity instanceof ServerPlayer player) {
+                MANAGER.releaseInvolving(player, true, "玩家死亡，拴绳已解除。");
+            }
+        });
         ServerEntityWorldChangeEvents.AFTER_PLAYER_CHANGE_WORLD.register((player, origin, destination) ->
                 MANAGER.releaseInvolving(player, true, "玩家切换维度，拴绳已解除。"));
         ServerTickEvents.END_SERVER_TICK.register(MANAGER::tick);

@@ -51,8 +51,15 @@ function Read-ClassMajorVersion {
     $stream = $entry.Open()
     try {
         $header = [byte[]]::new(8)
-        $read = $stream.Read($header, 0, $header.Length)
-        Assert-Release ($read -eq 8) "truncated class '$EntryName'"
+        $offset = 0
+        while ($offset -lt $header.Length) {
+            $read = $stream.Read($header, $offset, $header.Length - $offset)
+            if ($read -eq 0) {
+                break
+            }
+            $offset += $read
+        }
+        Assert-Release ($offset -eq 8) "truncated class '$EntryName'"
         Assert-Release (
             $header[0] -eq 0xCA -and $header[1] -eq 0xFE -and
             $header[2] -eq 0xBA -and $header[3] -eq 0xBE
@@ -62,6 +69,37 @@ function Read-ClassMajorVersion {
     finally {
         $stream.Dispose()
     }
+}
+
+function Read-ZipBytes {
+    param(
+        [IO.Compression.ZipArchive]$Archive,
+        [string]$EntryName
+    )
+
+    $entry = $Archive.GetEntry($EntryName)
+    Assert-Release ($null -ne $entry) "missing JAR entry '$EntryName'"
+    $stream = $entry.Open()
+    $buffer = [IO.MemoryStream]::new()
+    try {
+        $stream.CopyTo($buffer)
+        return $buffer.ToArray()
+    }
+    finally {
+        $buffer.Dispose()
+        $stream.Dispose()
+    }
+}
+
+function Test-ClassText {
+    param(
+        [IO.Compression.ZipArchive]$Archive,
+        [string]$EntryName,
+        [string]$Text
+    )
+
+    $bytes = Read-ZipBytes $Archive $EntryName
+    return [Text.Encoding]::ASCII.GetString($bytes).Contains($Text)
 }
 
 Assert-Release (Test-Path -LiteralPath $ReleaseDirectory -PathType Container) "release directory not found: $ReleaseDirectory"
@@ -84,12 +122,12 @@ Assert-Release (-not [string]::IsNullOrWhiteSpace($modVersion)) 'mod_version is 
 Assert-Release (-not [string]::IsNullOrWhiteSpace($archiveName)) 'archives_name is missing from gradle.properties'
 
 $targets = @(
-    [pscustomobject]@{ Name = 'fabric-1.20.1';   Minecraft = '1.20.1'; Java = 17; Major = 61; Pack = 15; Metadata = 'fabric.mod.json' },
-    [pscustomobject]@{ Name = 'fabric-1.21.1';   Minecraft = '1.21.1'; Java = 21; Major = 65; Pack = 34; Metadata = 'fabric.mod.json' },
-    [pscustomobject]@{ Name = 'forge-1.20.1';    Minecraft = '1.20.1'; Java = 17; Major = 61; Pack = 15; Metadata = 'META-INF/mods.toml' },
-    [pscustomobject]@{ Name = 'forge-1.21.1';    Minecraft = '1.21.1'; Java = 21; Major = 65; Pack = 34; Metadata = 'META-INF/mods.toml' },
-    [pscustomobject]@{ Name = 'neoforge-1.20.1'; Minecraft = '1.20.1'; Java = 17; Major = 61; Pack = 15; Metadata = 'META-INF/mods.toml' },
-    [pscustomobject]@{ Name = 'neoforge-1.21.1'; Minecraft = '1.21.1'; Java = 21; Major = 65; Pack = 34; Metadata = 'META-INF/neoforge.mods.toml' }
+    [pscustomobject]@{ Name = 'fabric-1.20.1';   Minecraft = '1.20.1'; Java = 17; Major = 61; Pack = 15; Metadata = 'fabric.mod.json';                InteractionGuard = $false; CompanionOrdering = $false },
+    [pscustomobject]@{ Name = 'fabric-1.21.1';   Minecraft = '1.21.1'; Java = 21; Major = 65; Pack = 34; Metadata = 'fabric.mod.json';                InteractionGuard = $true;  CompanionOrdering = $false },
+    [pscustomobject]@{ Name = 'forge-1.20.1';    Minecraft = '1.20.1'; Java = 17; Major = 61; Pack = 15; Metadata = 'META-INF/mods.toml';             InteractionGuard = $false; CompanionOrdering = $false },
+    [pscustomobject]@{ Name = 'forge-1.21.1';    Minecraft = '1.21.1'; Java = 21; Major = 65; Pack = 34; Metadata = 'META-INF/mods.toml';             InteractionGuard = $true;  CompanionOrdering = $false },
+    [pscustomobject]@{ Name = 'neoforge-1.20.1'; Minecraft = '1.20.1'; Java = 17; Major = 61; Pack = 15; Metadata = 'META-INF/mods.toml';             InteractionGuard = $false; CompanionOrdering = $false },
+    [pscustomobject]@{ Name = 'neoforge-1.21.1'; Minecraft = '1.21.1'; Java = 21; Major = 65; Pack = 34; Metadata = 'META-INF/neoforge.mods.toml';    InteractionGuard = $true;  CompanionOrdering = $true }
 )
 
 $jarFiles = @(Get-ChildItem -LiteralPath $ReleaseDirectory -Filter '*.jar' -File | Sort-Object Name)
@@ -102,6 +140,8 @@ $requiredEntries = @(
     'qizhang-player-leash.mixins.json',
     'qizhang-player-leash.refmap.json',
     'qizhang/playerleash/QizhangPlayerLeash.class',
+    'qizhang/playerleash/PlayerLeashManager.class',
+    'qizhang/playerleash/mixin/PlayerLeashMixin.class',
     'players_tether_icon.png',
     'META-INF/LICENSE-qizhang_player_leash'
 )
@@ -123,6 +163,11 @@ foreach ($target in $targets) {
             Assert-Release (($entryNames -contains $metadataPath) -eq $shouldExist) "$expectedName has an invalid loader metadata set"
         }
 
+        $interactionMixinClass = 'qizhang/playerleash/mixin/PlayerEntityInteractMixin.class'
+        Assert-Release (
+            (($entryNames -contains $interactionMixinClass) -eq $target.InteractionGuard)
+        ) "$expectedName has the wrong version-specific interaction Mixin class set"
+
         $metadataText = Read-ZipText $archive $target.Metadata
         if ($target.Metadata -eq 'fabric.mod.json') {
             $fabricMetadata = $metadataText | ConvertFrom-Json
@@ -139,6 +184,24 @@ foreach ($target in $targets) {
             Assert-Release ([regex]::IsMatch($metadataText, $minecraftPattern)) "$expectedName has the wrong Minecraft dependency"
         }
 
+        $hasCompanionOrdering = [regex]::IsMatch(
+            $metadataText,
+            '(?m)^\s*modId\s*=\s*"qizhang_aquaculture_turtle_companion"\s*$'
+        )
+        Assert-Release (
+            $hasCompanionOrdering -eq $target.CompanionOrdering
+        ) "$expectedName has the wrong optional companion metadata scope"
+        if ($target.CompanionOrdering) {
+            $companionBlockPattern = '(?ms)' +
+                    '\[\[dependencies\.qizhang_player_leash\]\]\s*' +
+                    'modId\s*=\s*"qizhang_aquaculture_turtle_companion"\s*' +
+                    'type\s*=\s*"optional"\s*' +
+                    'versionRange\s*=\s*"\[1\.0\.0,\)"\s*' +
+                    'ordering\s*=\s*"BEFORE"\s*' +
+                    'side\s*=\s*"SERVER"\s*'
+            Assert-Release ([regex]::IsMatch($metadataText, $companionBlockPattern)) "$expectedName has an invalid optional companion dependency block"
+        }
+
         $packMetadata = (Read-ZipText $archive 'pack.mcmeta') | ConvertFrom-Json
         Assert-Release ([int]$packMetadata.pack.pack_format -eq $target.Pack) "$expectedName has the wrong resource-pack format"
 
@@ -146,6 +209,31 @@ foreach ($target in $targets) {
         Assert-Release ($mixinMetadata.required -eq $true) "$expectedName does not require its Mixin config"
         Assert-Release ($mixinMetadata.refmap -eq 'qizhang-player-leash.refmap.json') "$expectedName has the wrong refmap name"
         Assert-Release ($mixinMetadata.compatibilityLevel -eq "JAVA_$($target.Java)") "$expectedName has the wrong Mixin Java level"
+        $mixinNames = @($mixinMetadata.mixins)
+        Assert-Release ($mixinNames -contains 'PlayerLeashMixin') "$expectedName does not register PlayerLeashMixin"
+        Assert-Release (
+            (($mixinNames -contains 'PlayerEntityInteractMixin') -eq $target.InteractionGuard)
+        ) "$expectedName has the wrong version-specific Mixin registration set"
+
+        Assert-Release (
+            (Test-ClassText $archive 'qizhang/playerleash/QizhangPlayerLeash.class' $modVersion)
+        ) "$expectedName does not expose runtime version $modVersion"
+        if ($target.InteractionGuard) {
+            Assert-Release (
+                (Test-ClassText $archive 'qizhang/playerleash/mixin/PlayerLeashMixin.class' 'qizhang$keepElasticBeyondVanillaRange')
+            ) "$expectedName is missing the elastic too-far override"
+            Assert-Release (
+                -not (Test-ClassText $archive 'qizhang/playerleash/mixin/PlayerLeashMixin.class' 'qizhang$tickPlayerLeash')
+            ) "$expectedName still contains the duplicate player leash tick"
+            Assert-Release (
+                (Test-ClassText $archive $interactionMixinClass 'qizhang$skipVanillaLeashToggleForPlayerTarget')
+            ) "$expectedName is missing the player interaction guard"
+        }
+        else {
+            Assert-Release (
+                -not (Test-ClassText $archive 'qizhang/playerleash/PlayerLeashManager.class' 'BREAK_RANGE')
+            ) "$expectedName still contains the removed hard break range"
+        }
 
         $refmapEntry = $archive.GetEntry('qizhang-player-leash.refmap.json')
         Assert-Release ($refmapEntry.Length -gt 2) "$expectedName has an empty refmap"

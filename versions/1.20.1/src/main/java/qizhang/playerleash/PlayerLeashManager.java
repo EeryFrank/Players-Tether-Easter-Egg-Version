@@ -28,7 +28,6 @@ final class PlayerLeashManager {
     private static final int EFFECT_REFRESH_INTERVAL_TICKS = 20;
     private static final int HEART_PARTICLE_INTERVAL_TICKS = 10;
     private static final double ELASTIC_RANGE = 6.0D;
-    private static final double BREAK_RANGE = 10.0D;
     private static final double PULL_PER_EXCESS_BLOCK = 0.1D;
     private static final double MAX_PULL_PER_TICK = 0.4D;
 
@@ -83,8 +82,9 @@ final class PlayerLeashManager {
         target.sendSystemMessage(Component.literal(
                 holder.getGameProfile().getName() + " 用拴绳拴住了你。")
                 .withStyle(ChatFormatting.GOLD));
-        LOGGER.info("[七章玩家拴绳] {} -> {} attached (leadConsumed={})",
-                holder.getGameProfile().getName(), target.getGameProfile().getName(), consumed);
+        LOGGER.info("[七章玩家拴绳] {} -> {} attached (leadConsumed={}, distance={})",
+                holder.getGameProfile().getName(), target.getGameProfile().getName(), consumed,
+                String.format(java.util.Locale.ROOT, "%.2f", holder.distanceTo(target)));
         return true;
     }
 
@@ -253,11 +253,6 @@ final class PlayerLeashManager {
             }
 
             double distanceSquared = target.distanceToSqr(holder);
-            if (distanceSquared > BREAK_RANGE * BREAK_RANGE) {
-                release(target, true, true, "距离过远，拴绳已断开。");
-                continue;
-            }
-
             activeTargets.add(target.getUUID());
             if (distanceSquared > ELASTIC_RANGE * ELASTIC_RANGE) {
                 applyElasticPull(target, holder, Math.sqrt(distanceSquared));

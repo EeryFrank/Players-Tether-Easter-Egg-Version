@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.1.2 - 2026-08-16
+
+- Ported the single-loader 1.0.2 server fixes to all three Minecraft 1.21.1
+  loader builds.
+- Prevented vanilla's second player interaction path from immediately removing
+  a permission-checked tether established by the same right click.
+- Removed the duplicate Minecraft 1.21.1 leash tick; the base entity tick
+  already invokes `Leashable.tickLeash`.
+- Kept valid player tethers elastic beyond vanilla's ten-block cutoff on both
+  supported Minecraft versions instead of breaking solely because of distance.
+- Limited the interaction bypass to a player target already tethered to the
+  interacting player, preserving unrelated player and mob interactions.
+- Routed player death through the mod's release manager before vanilla's static
+  cleanup, preserving creative-mode no-drop and self-client detach semantics.
+- Preserved the survival lead-consumption decision across dimension transfer so
+  the after-change event can refund it after vanilla clears the holder link.
+- Added attach-distance diagnostics and stricter release-JAR checks for the new
+  1.21.1 interaction Mixin and removed duplicate-tick method.
+- Added optional, server-side load ordering for QiZhang Aquaculture Turtle
+  Companion on NeoForge 1.21.1 without introducing a runtime dependency.
+
 ## 1.1.0 - 2026-08-15
 
 - Added separate Fabric, NeoForge, and Forge builds for Minecraft 1.21.1 and 1.20.1.
