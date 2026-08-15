@@ -41,3 +41,4 @@ repo/
 
 ### Local QA previews ###
 build-icon-preview-*.png
+*-installer.jar.log

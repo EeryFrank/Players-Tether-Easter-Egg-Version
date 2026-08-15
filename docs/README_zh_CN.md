@@ -6,10 +6,18 @@
 
 ## 环境与安装
 
-- Minecraft 1.21.1
-- NeoForge 21.1.244～21.1.x
-- Java 21
-- 服务端和所有客户端必须安装同一份 JAR，并完整重启
+| Minecraft | 加载器构建目标 | Java | 发布状态 |
+| --- | --- | ---: | --- |
+| 1.21.1 | Fabric Loader 0.19.3 + Fabric API 0.116.15 | 21 | 支持 |
+| 1.21.1 | NeoForge 21.1.244 | 21 | 支持 |
+| 1.21.1 | Forge 52.1.0 | 21 | 支持 |
+| 1.20.1 | Fabric Loader 0.19.3 + Fabric API 0.92.11 | 17 | 支持 |
+| 1.20.1 | NeoForge 47.1.106 历史兼容线 | 17 | 实验性 |
+| 1.20.1 | Forge 47.4.10 | 17 | 支持 |
+
+服务端和所有客户端必须安装文件名中 Minecraft 版本、加载器都完全匹配的 JAR，并完整重启；六个 JAR 不能混用。
+
+NeoForge 1.20.1 是已停止维护的短期 Forge 兼容分支。该目标仅为旧环境保留，不代表对现代 NeoForge 的支持，发布时按实验性版本处理。
 
 ## 玩家操作
 
@@ -47,14 +55,17 @@
 
 ## 构建
 
-使用 Java 21：
+使用 Java 21 启动 Gradle；构建脚本会自动为 1.20.1 的编译和运行任务选择 Java 17：
 
 ```powershell
-.\gradlew.bat clean build
+.\gradlew.bat --no-daemon --console=plain clean buildAll collectReleaseJars
+pwsh -NoProfile -File .\tools\Verify-Release.ps1
 ```
 
-产物位于 `build/libs/`。
+六个发布 JAR 与 `SHA256SUMS.txt` 位于 `build/release/`。单独构建某个目标可使用例如 `.\gradlew.bat :fabric-1.20.1:build`。
 
 ## 验证边界
 
-已覆盖编译、自测、JAR 结构、NeoForge 21.1.244 完整启动/安全关闭、控制台规则命令和 RCON 越权拒绝。两名真人客户端的拴绳手感、狼模型与爱心视觉仍属于发布前实机验收项。
+已覆盖六目标编译、自测、加载器元数据、Mixin/refmap、资源包格式、Java 字节码版本和发布校验和；六个专用服务端目标均已启动到 `Done` 并安全关闭，三个 1.20.1 目标确认使用 Java 17 且控制台状态命令正常。
+
+`NEEDS_MANUAL_VALIDATION`：仍需两名真人客户端验收玩家间状态同步、拉力/断绳距离、绳线、狼模型和爱心视觉；1.20.1 使用独立的同步与渲染实现，必须重点实测。

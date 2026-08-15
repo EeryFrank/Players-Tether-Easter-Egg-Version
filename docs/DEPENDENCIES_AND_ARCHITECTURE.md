@@ -2,55 +2,84 @@
 
 ## External dependencies / 外部依赖
 
-| Layer / 层级 | Version / 版本 | Purpose / 用途 |
+| Layer / 层级 | Pinned build target / 固定构建目标 | Purpose / 用途 |
 | --- | --- | --- |
-| Java | 21 | Compile and run the mod / 编译和运行模组 |
-| Minecraft | 1.21.1 | Game API and runtime / 游戏 API 与运行环境 |
-| NeoForge | 21.1.244 to 21.1.x | Loader, events, networking, registries, and bundled Mixin runtime / 加载器、事件、网络、注册表及其内置 Mixin 运行时 |
-| ModDevGradle | 2.0.143 | NeoForge development and packaging / NeoForge 开发与打包 |
-| Gradle Wrapper | 9.2.1 | Reproducible build entry point / 可复现构建入口 |
+| Java | 17 for MC 1.20.1; 21 for MC 1.21.1 | Target runtime and class version / 目标运行时与字节码版本 |
+| Minecraft | 1.20.1 and 1.21.1 | Game API and runtime / 游戏 API 与运行环境 |
+| Fabric | Loader 0.19.3; API 0.92.11+1.20.1 or 0.116.15+1.21.1 | Fabric entry points, events, and packaging / Fabric 入口、事件与打包 |
+| NeoForge | 21.1.244 for MC 1.21.1 | Modern NeoForge entry points, events, registries, and packaging / 现代 NeoForge 入口、事件、注册与打包 |
+| NeoForge legacy | `net.neoforged:forge:1.20.1-47.1.106` | Experimental legacy Forge-compatible target / 实验性历史 Forge 兼容目标 |
+| Forge | 47.4.10 for MC 1.20.1; 52.1.0 for MC 1.21.1 | Forge entry points, events, registries, and packaging / Forge 入口、事件、注册与打包 |
+| Architectury Loom | 1.11.456 | Mojang-mapped multi-target development and remapping / Mojang 映射的多目标开发与重映射 |
+| Gradle Wrapper | 8.14.1 | Reproducible build entry point and Java toolchain selection / 可复现构建入口与 Java 工具链选择 |
 
-The mod has no dependency on another gameplay mod. The same mod JAR is required on the dedicated server and every connecting client.
+The mod has no dependency on another gameplay mod. Fabric builds require the matching Fabric API. A dedicated server and every connecting client must use the same Minecraft-version/loader JAR.
 
-本模组不依赖其他玩法模组。专用服务器和所有连接客户端都必须安装同一份 JAR。
+本模组不依赖其他玩法模组；Fabric 版本需要对应的 Fabric API。专用服务器和所有连接客户端必须使用 Minecraft 版本与加载器完全一致的 JAR。
+
+NeoForge 1.20.1 is the discontinued 47.x compatibility line, not the modern NeoForge platform. It shares the Forge-era API source layer but is compiled and packaged against the separate `net.neoforged` artifact. It remains an experimental release target.
+
+NeoForge 1.20.1 是已停止维护的 47.x 兼容线，并非现代 NeoForge 平台。它与 Forge 时代共用 API 源码层，但针对独立的 `net.neoforged` 产物编译与打包，发布状态保持为实验性。
 
 ```mermaid
-flowchart LR
-    Java21["Java 21"] --> Gradle["Gradle Wrapper 9.2.1"]
-    Gradle --> MDG["ModDevGradle 2.0.143"]
-    Minecraft["Minecraft 1.21.1"] --> NeoForge["NeoForge 21.1.244+"]
-    MDG --> NeoForge
-    NeoForge --> Mod["Player's Tether"]
-    Mixin["Mixin runtime"] -. "provided by NeoForge" .-> Mod
+flowchart TD
+    Gradle["Gradle 8.14.1 + Loom 1.11.456"] --> Core["common: rules and timing"]
+    Core --> MC120["Minecraft 1.20.1 shared implementation - Java 17"]
+    Core --> MC121["Minecraft 1.21.1 shared implementation - Java 21"]
+    MC120 --> F120["Fabric 1.20.1"]
+    MC120 --> N120["NeoForge legacy 1.20.1"]
+    MC120 --> G120["Forge 1.20.1"]
+    MC121 --> F121["Fabric 1.21.1"]
+    MC121 --> N121["NeoForge 1.21.1"]
+    MC121 --> G121["Forge 1.21.1"]
 ```
 
 ## Internal component relationships / 内部代码关系
 
+The source tree is layered so that game rules and timing are loader-independent, Minecraft API differences are isolated by game version, and loader modules only contain entry points, registrations, event bridges, and metadata.
+
+源码按层拆分：规则与计时不依赖加载器；Minecraft API 差异按游戏版本隔离；加载器模块只保留入口、注册、事件桥接和元数据。
+
 ```mermaid
 flowchart TD
-    Entry["QizhangPlayerLeash\nmod entry"] --> Manager["PlayerLeashManager\nserver-authoritative tether state"]
-    Entry --> Commands["PlayerLeashCommands\nOP4/local-console administration"]
-    Entry --> Effect["TamedMobEffect\neffect registration"]
+    Entry["Fabric / NeoForge / Forge entry"] --> Manager["PlayerLeashManager - server authority"]
+    Entry --> Commands["PlayerLeashCommands - OP4/local-console administration"]
+    Entry --> Effect["TamedMobEffect registration"]
 
-    LeashMixin["PlayerLeashMixin\nvanilla leash interaction bridge"] --> Manager
-    Commands --> Manager
-    Commands --> Rules["LeashRuleStore\ndirectional allow/deny rules"]
+    Commands --> Rules["LeashRuleStore - directional rules"]
     Manager --> Rules
-    Manager --> Schedule["TamingSchedule\ndeterministic timing"]
+    Manager --> Schedule["TamingSchedule - deterministic timing"]
     Manager --> Effect
 
-    RendererMixin["PlayerRendererMixin\nclient render bridge"] --> Renderer["TamedPlayerRenderer\nvisual replacement"]
-    Renderer --> Effect
+    MC121Mixin["MC 1.21.1 Player mixin - vanilla Leashable"] --> Manager
+    MC120Mixin["MC 1.20.1 PlayerTetherAccess - synchronized holder id"] --> Manager
+    MC120Mixin --> MC120Physics["custom pull, break, and release logic"]
+
+    RenderMixin["PlayerRenderer mixin"] --> Wolf["TamedPlayerRenderer - visual wolf"]
+    RenderMixin --> Rope120["MC 1.20.1 custom rope renderer"]
+    Wolf --> Effect
 ```
+
+Minecraft 1.21.1 exposes the general `Leashable` API used by the vanilla synchronization and physics path. Minecraft 1.20.1 stores leash behavior on mobs instead, so that version has its own synchronized player holder ID, server-authoritative physics/release logic, and client rope renderer. These version layers are intentionally not merged.
+
+Minecraft 1.21.1 提供通用 `Leashable` API，可复用原版同步与物理路径；Minecraft 1.20.1 的拴绳逻辑仍位于生物实体，因此该版本使用独立的玩家持有者 ID 同步、服务端物理/解除逻辑及客户端绳线渲染。这两个版本层有意保持分离。
 
 ## Runtime boundary / 运行边界
 
 - The server owns tether state, permission checks, release conditions, effect progression, and rule persistence.
-- The client only replaces the local rendering path when the synchronized effect is present.
-- The renderer does not change inventory, hitbox, game mode, permissions, or player identity.
+- The client renders synchronized tether/effect state and never decides server rules or item consumption.
+- The wolf replacement is visual only; it does not change inventory, hitbox, game mode, permissions, or player identity.
 - Rule changes are accepted only from a real permission-level-4 player or the direct local server console.
+- Every release JAR contains exactly one loader metadata file, the Mixin config and non-empty refmap, the correct resource-pack format, and the class version required by its Minecraft target.
 
 - 服务端负责拴绳状态、权限检查、断开条件、效果进度和规则持久化。
-- 客户端只在同步效果存在时替换渲染路径。
-- 渲染器不会修改背包、碰撞箱、游戏模式、权限或玩家身份。
+- 客户端仅渲染已同步的拴绳/效果状态，不决定后台规则或物品消耗。
+- 狼模型替换仅改变画面，不修改背包、碰撞箱、游戏模式、权限或玩家身份。
 - 规则修改仅接受权限 4 级真人管理员或服务器本地控制台。
+- 每个发布 JAR 只包含一种加载器元数据，同时包含 Mixin 配置、非空 refmap、正确的资源包格式及目标 Minecraft 所需的字节码版本。
+
+## Validation boundary / 验证边界
+
+Compilation, deterministic self-tests, JAR structure, checksums, and dedicated-server startup/shutdown are automated. `NEEDS_MANUAL_VALIDATION`: two-client synchronization, pulling feel, break distance, lead rendering, wolf replacement, and heart particles still require real-client acceptance, with special attention to the independent Minecraft 1.20.1 renderer.
+
+编译、确定性自测、JAR 结构、校验和及专用服务端启停均有自动验证。`NEEDS_MANUAL_VALIDATION`：双客户端同步、拉力手感、断绳距离、绳线、狼模型与爱心粒子仍需真实客户端验收，尤其应重点检查 Minecraft 1.20.1 的独立渲染实现。

@@ -1,0 +1,30 @@
+modLoader = "javafml"
+loaderVersion = "[52,)"
+license = "${mod_license}"
+issueTrackerURL = "https://github.com/EeryFrank/Players-Tether-Easter-Egg-Version/issues"
+
+[[mods]]
+modId = "${mod_id}"
+version = "${mod_version}"
+displayName = "${mod_name}"
+authors = "${mod_authors}"
+logoFile = "players_tether_icon.png"
+displayURL = "https://github.com/EeryFrank/Players-Tether-Easter-Egg-Version"
+description = '''${mod_description}'''
+
+[[mixins]]
+config = "qizhang-player-leash.mixins.json"
+
+[[dependencies.${mod_id}]]
+modId = "forge"
+mandatory = true
+versionRange = "[${forge_version},53)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.${mod_id}]]
+modId = "minecraft"
+mandatory = true
+versionRange = "[${minecraft_version}]"
+ordering = "NONE"
+side = "BOTH"
