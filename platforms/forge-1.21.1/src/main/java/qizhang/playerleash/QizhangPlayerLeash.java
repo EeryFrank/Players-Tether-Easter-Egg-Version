@@ -11,6 +11,7 @@ import net.minecraft.world.item.Items;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.server.ServerStoppingEvent;
@@ -23,7 +24,7 @@ import net.minecraftforge.registries.RegistryObject;
 @Mod(QizhangPlayerLeash.MOD_ID)
 public final class QizhangPlayerLeash {
     public static final String MOD_ID = "qizhang_player_leash";
-    public static final String VERSION = "1.1.0";
+    public static final String VERSION = "1.1.2";
 
     private static final DeferredRegister<MobEffect> EFFECTS =
             DeferredRegister.create(Registries.MOB_EFFECT, MOD_ID);
@@ -36,6 +37,7 @@ public final class QizhangPlayerLeash {
         EFFECTS.register(modBus);
         MinecraftForge.EVENT_BUS.addListener(this::onRegisterCommands);
         MinecraftForge.EVENT_BUS.addListener(this::onEntityInteract);
+        MinecraftForge.EVENT_BUS.addListener(this::onLivingDeath);
         MinecraftForge.EVENT_BUS.addListener(this::onPlayerLoggedOut);
         MinecraftForge.EVENT_BUS.addListener(this::onPlayerChangedDimension);
         MinecraftForge.EVENT_BUS.addListener(this::onServerTick);
@@ -85,6 +87,12 @@ public final class QizhangPlayerLeash {
     private void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             MANAGER.releaseInvolving(player, true, "玩家离线，拴绳已解除。");
+        }
+    }
+
+    private void onLivingDeath(LivingDeathEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player) {
+            MANAGER.releaseInvolving(player, true, "玩家死亡，拴绳已解除。");
         }
     }
 

@@ -7,9 +7,6 @@ import net.minecraft.world.entity.Leashable;
 import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import qizhang.playerleash.QizhangPlayerLeash;
 
 @Mixin(Player.class)
@@ -44,6 +41,26 @@ public abstract class PlayerLeashMixin implements Leashable {
     }
 
     @Override
+    public void leashTooFarBehaviour() {
+        Entity self = (Entity) (Object) this;
+        Entity holder = getLeashHolder();
+        if (holder == null || !self.isAlive() || !holder.isAlive()) {
+            dropLeash(true, true);
+            return;
+        }
+
+        // Vanilla drops a leash immediately beyond ten blocks. Player tethers
+        // remain elastic instead; explicit lifecycle and policy checks still
+        // release invalid links through PlayerLeashManager.
+        qizhang$keepElasticBeyondVanillaRange(holder, self);
+    }
+
+    @Unique
+    private void qizhang$keepElasticBeyondVanillaRange(Entity holder, Entity self) {
+        elasticRangeLeashBehaviour(holder, self.distanceTo(holder));
+    }
+
+    @Override
     public void setLeashedTo(Entity holder, boolean broadcastPacket) {
         Leashable.super.setLeashedTo(holder, broadcastPacket);
         Object self = this;
@@ -63,10 +80,5 @@ public abstract class PlayerLeashMixin implements Leashable {
         if (broadcastPacket && self instanceof ServerPlayer serverPlayer) {
             serverPlayer.connection.send(new ClientboundSetEntityLinkPacket(serverPlayer, null));
         }
-    }
-
-    @Inject(method = "tick", at = @At("TAIL"))
-    private void qizhang$tickPlayerLeash(CallbackInfo callbackInfo) {
-        Leashable.tickLeash((Entity & Leashable) (Object) this);
     }
 }

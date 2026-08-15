@@ -23,13 +23,19 @@ Install the JAR whose filename exactly matches the Minecraft version and loader 
 
 NeoForge 1.20.1 was a short-lived Forge-compatible line that is no longer maintained upstream. Its build is provided for legacy installations and must not be treated as modern NeoForge support.
 
+On NeoForge 1.21.1, QiZhang Aquaculture Turtle Companion 1.0.0+ is an optional
+server-side compatibility mod. Player's Tether handles player targets while the
+companion handles its owned non-player living entities; metadata only provides
+deterministic load ordering and does not make either mod mandatory.
+
 ## Player controls
 
 - Hold a vanilla lead and right-click another player to attach it.
 - The holder can sneak-right-click their own tethered target to release it.
 - Survival mode consumes a lead and follows vanilla lead-drop behavior.
 - Creative mode neither consumes nor creates a free lead.
-- Death, logout, dimension changes, invalid holders, excessive distance, or a changed server rule release the tether.
+- Death, logout, dimension changes, invalid holders, or a changed server rule release the tether.
+- A valid player tether remains elastic beyond vanilla's ten-block cutoff instead of snapping solely because of distance.
 - Cyclic player-to-player tether chains are rejected.
 
 ## Taming easter egg
@@ -101,9 +107,9 @@ The complete external dependency graph, server/client boundary, and internal com
 
 ## Validation status
 
-Automated validation covers all six compilations, deterministic self-tests, loader metadata, Mixin/refmap presence, resource-pack formats, Java class versions, and release checksums. Dedicated-server smoke tests reached `Done` and shut down cleanly on all six targets; the 1.20.1 targets also reported Java 17 and accepted the direct-console status command.
+Automated validation covers all six compilations, deterministic self-tests, loader metadata, version-specific Mixin/refmap contents, resource-pack formats, Java class versions, and release checksums. Dedicated-server smoke tests reached `Done` and shut down cleanly on all six targets; the 1.20.1 targets also reported Java 17 and accepted the direct-console status command.
 
-`NEEDS_MANUAL_VALIDATION`: two real clients are still required to accept player-to-player synchronization, pulling/break distance, lead rendering, wolf replacement, and heart appearance. This is especially important for the custom 1.20.1 tether renderer.
+`NEEDS_MANUAL_VALIDATION`: two real clients are still required to accept player-to-player synchronization, pulling and long-distance behavior, lead rendering, wolf replacement, and heart appearance. This is especially important for the custom 1.20.1 tether renderer.
 
 ## 中文简介
 

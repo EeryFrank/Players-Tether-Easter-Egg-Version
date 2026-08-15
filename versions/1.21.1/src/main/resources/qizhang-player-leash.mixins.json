@@ -5,7 +5,8 @@
   "compatibilityLevel": "JAVA_21",
   "refmap": "qizhang-player-leash.refmap.json",
   "mixins": [
-    "PlayerLeashMixin"
+    "PlayerLeashMixin",
+    "PlayerEntityInteractMixin"
   ],
   "client": [
     "client.PlayerRendererMixin"

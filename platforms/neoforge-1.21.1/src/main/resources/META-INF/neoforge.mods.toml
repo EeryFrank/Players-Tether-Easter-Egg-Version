@@ -28,3 +28,13 @@ type = "required"
 versionRange = "[${minecraft_version}]"
 ordering = "NONE"
 side = "BOTH"
+
+# Optional NeoForge 1.21.1 compatibility boundary. Player's Tether owns
+# player targets while QiZhang Aquaculture Turtle Companion owns non-player
+# living targets, so deterministic ordering avoids competing interactions.
+[[dependencies.${mod_id}]]
+modId = "qizhang_aquaculture_turtle_companion"
+type = "optional"
+versionRange = "[1.0.0,)"
+ordering = "BEFORE"
+side = "SERVER"
