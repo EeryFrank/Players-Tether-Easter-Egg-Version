@@ -52,6 +52,7 @@ flowchart TD
     Manager --> Rules
     Manager --> Schedule["TamingSchedule - deterministic timing"]
     Manager --> Effect
+    Manager --> Tracking["effect packet - target and tracking clients"]
 
     MC121Mixin["MC 1.21.1 Player mixin - vanilla Leashable"] --> Manager
     MC121Interact["MC 1.21.1 Entity interaction guard - prevent same-click vanilla detach"] --> MC121Mixin
@@ -59,24 +60,29 @@ flowchart TD
     MC120Mixin --> MC120Physics["custom elastic pull and release logic"]
 
     RenderMixin["PlayerRenderer mixin"] --> Wolf["TamedPlayerRenderer - visual wolf"]
+    VisualRules["TamedVisualRules - level 3 wolf / level 6 hearts"] --> Wolf
+    VisualRules --> Manager
     RenderMixin --> Rope120["MC 1.20.1 custom rope renderer"]
+    ClientStage["loader AFTER_ENTITIES event"] --> FirstPerson["FirstPersonLeashRenderer"]
+    FirstPerson --> Rope120
+    FirstPerson --> Rope121["MC 1.21.1 vanilla leash invoker"]
     Wolf --> Effect
 ```
 
-Minecraft 1.21.1 exposes the general `Leashable` API used by the vanilla synchronization and physics path. Its interaction guard prevents the same click from attaching and then immediately toggling the player leash off, while its distance override keeps a valid tether elastic beyond vanilla's ten-block cutoff. Minecraft 1.20.1 stores leash behavior on mobs instead, so that version has its own synchronized player holder ID, server-authoritative elastic physics/release logic, and client rope renderer. These version layers are intentionally not merged.
+Minecraft 1.21.1 exposes the general `Leashable` API used by the vanilla synchronization and physics path. Its interaction guard prevents the same click from attaching and then immediately toggling the player leash off, while its distance override keeps a valid tether elastic beyond vanilla's ten-block cutoff. Minecraft 1.20.1 stores leash behavior on mobs instead, so that version has its own synchronized player holder ID, server-authoritative elastic physics/release logic, and client rope renderer. Fabric, Forge, and NeoForge bridge their matching `AFTER_ENTITIES` stage to the version-specific first-person renderer: 1.21.1 invokes the vanilla leash path, while 1.20.1 reuses the custom rope path. These version layers are intentionally not merged.
 
-Minecraft 1.21.1 提供通用 `Leashable` API，可复用原版同步与物理路径；其交互保护会阻止同一次点击先建立、随后又被原版立即解除玩家拴绳，距离覆盖则让有效拴绳超过原版十格后继续弹性拉回。Minecraft 1.20.1 的拴绳逻辑仍位于生物实体，因此该版本使用独立的玩家持有者 ID 同步、服务端弹性物理/解除逻辑及客户端绳线渲染。这两个版本层有意保持分离。
+Minecraft 1.21.1 提供通用 `Leashable` API，可复用原版同步与物理路径；其交互保护会阻止同一次点击先建立、随后又被原版立即解除玩家拴绳，距离覆盖则让有效拴绳超过原版十格后继续弹性拉回。Minecraft 1.20.1 的拴绳逻辑仍位于生物实体，因此该版本使用独立的玩家持有者 ID 同步、服务端弹性物理/解除逻辑及客户端绳线渲染。Fabric、Forge、NeoForge 都把各自的 `AFTER_ENTITIES` 阶段桥接到按版本实现的第一人称渲染器：1.21.1 调用原版绳线路径，1.20.1 复用自绘绳线路径。这两个版本层有意保持分离。
 
 ## Runtime boundary / 运行边界
 
-- The server owns tether state, permission checks, release conditions, effect progression, and rule persistence.
+- The server owns tether state, permission checks, release conditions, effect progression, tracking-client effect broadcasts, and rule persistence.
 - Loader death events release involved player links before vanilla's static 1.21.1 cleanup; dimension changes preserve the consumed-lead decision until the after-change event settles it.
 - The client renders synchronized tether/effect state and never decides server rules or item consumption.
 - The wolf replacement is visual only; it does not change inventory, hitbox, game mode, permissions, or player identity.
 - Rule changes are accepted only from a real permission-level-4 player or the direct local server console.
 - Every release JAR contains exactly one loader metadata file, the Mixin config and non-empty refmap, the correct resource-pack format, and the class version required by its Minecraft target.
 
-- 服务端负责拴绳状态、权限检查、断开条件、效果进度和规则持久化。
+- 服务端负责拴绳状态、权限检查、断开条件、效果进度、追踪客户端效果广播和规则持久化。
 - 各加载器的死亡事件会在原版 1.21.1 静态清理前解除相关玩家连接；维度切换则保留拴绳消耗记录，直到切换后事件完成结算。
 - 客户端仅渲染已同步的拴绳/效果状态，不决定后台规则或物品消耗。
 - 狼模型替换仅改变画面，不修改背包、碰撞箱、游戏模式、权限或玩家身份。
@@ -85,6 +91,6 @@ Minecraft 1.21.1 提供通用 `Leashable` API，可复用原版同步与物理�
 
 ## Validation boundary / 验证边界
 
-Compilation, deterministic self-tests, version-specific Mixin structure, JAR metadata, checksums, and dedicated-server startup/shutdown are automated. `NEEDS_MANUAL_VALIDATION`: two-client synchronization, pulling and long-distance behavior, lead rendering, wolf replacement, and heart particles still require real-client acceptance, with special attention to the independent Minecraft 1.20.1 renderer.
+Compilation, deterministic self-tests, version-specific Mixin structure, JAR metadata, checksums, and dedicated-server startup/shutdown are automated for all six targets. Client rendering initialization passed on the three 1.20.1 targets and on Fabric/NeoForge 1.21.1; Forge 1.21.1's Loom userdev client failed in Forge's early-display module setup before mod loading, while its production JAR passed compilation, release verification, and an official Forge 52.1.0 server smoke. `NEEDS_MANUAL_VALIDATION`: a holder, tethered player, and third observer must still accept synchronization, pulling and long-distance behavior, the tethered player's first-/third-person rope, the observer's wolf replacement, and heart particles, with special attention to the independent Minecraft 1.20.1 renderer.
 
-编译、确定性自测、按版本区分的 Mixin 结构、JAR 元数据、校验和及专用服务端启停均有自动验证。`NEEDS_MANUAL_VALIDATION`：双客户端同步、拉力与远距离行为、绳线、狼模型与爱心粒子仍需真实客户端验收，尤其应重点检查 Minecraft 1.20.1 的独立渲染实现。
+六个目标均已自动验证编译、确定性自测、按版本区分的 Mixin 结构、JAR 元数据、校验和及专用服务端启停。客户端渲染初始化已在三个 1.20.1 目标和 Fabric/NeoForge 1.21.1 通过；Forge 1.21.1 的 Loom userdev 客户端在模组加载前因 Forge early-display 模块层初始化失败，但其生产 JAR 已通过编译、发布校验和官方 Forge 52.1.0 服务端冒烟。`NEEDS_MANUAL_VALIDATION`：仍需拴人者、被拴者和第三方观察者验收同步、拉力与远距离行为、被拴者第一/第三人称绳线、观察者看到的狼模型及爱心粒子，尤其应重点检查 Minecraft 1.20.1 的独立渲染实现。

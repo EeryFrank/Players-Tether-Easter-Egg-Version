@@ -27,7 +27,6 @@ public abstract class PlayerRendererMixin {
             CallbackInfo callbackInfo) {
         if (TamedPlayerRenderer.renderIfTamed(
                 player, entityYaw, partialTicks, poseStack, buffers, packedLight)) {
-            PlayerLeashRenderer.render(player, partialTicks, poseStack, buffers);
             callbackInfo.cancel();
         }
     }

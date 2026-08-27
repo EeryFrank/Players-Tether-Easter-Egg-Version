@@ -9,7 +9,8 @@
     "PlayerEntityInteractMixin"
   ],
   "client": [
-    "client.PlayerRendererMixin"
+    "client.PlayerRendererMixin",
+    "client.EntityRendererInvoker"
   ],
   "injectors": {
     "defaultRequire": 1

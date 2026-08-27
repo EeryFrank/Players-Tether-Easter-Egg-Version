@@ -14,7 +14,8 @@
   "icon": "players_tether_icon.png",
   "environment": "*",
   "entrypoints": {
-    "main": ["qizhang.playerleash.QizhangPlayerLeash"]
+    "main": ["qizhang.playerleash.QizhangPlayerLeash"],
+    "client": ["qizhang.playerleash.QizhangPlayerLeashClient"]
   },
   "mixins": ["qizhang-player-leash.mixins.json"],
   "depends": {

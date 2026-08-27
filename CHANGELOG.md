@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.1.5 - 2026-08-27
+
+- Ported the deployed single-loader 1.0.5 server/client fixes to Fabric,
+  NeoForge, and Forge on both Minecraft 1.21.1 and 1.20.1.
+- Rendered the tether rope in the tethered player's own first-person view while
+  keeping the existing second/third-person player and wolf-proxy ropes.
+- Broadcast taming-effect refreshes to the tethered player and every tracking
+  client, so observers receive the state needed to render the level-3 wolf.
+- Moved level-6 heart emission to the every-tick taming path, fixing a timing
+  phase mismatch that could prevent hearts from appearing.
+- Kept layer progress in the tethered player's effect HUD and removed their
+  duplicate progress chat; the leash holder still receives each notification.
+- Added shared deterministic rules for the level-3 wolf and level-6 hearts,
+  plus release checks for the new synchronization and rendering paths.
+- Preserved the 1.1.2 death, cross-dimension lead settlement, elastic-distance,
+  and narrowly scoped player-interaction fixes during the port.
+
 ## 1.1.2 - 2026-08-16
 
 - Ported the single-loader 1.0.2 server fixes to all three Minecraft 1.21.1

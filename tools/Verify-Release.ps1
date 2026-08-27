@@ -102,6 +102,17 @@ function Test-ClassText {
     return [Text.Encoding]::ASCII.GetString($bytes).Contains($Text)
 }
 
+function Test-ClassUtf8Text {
+    param(
+        [IO.Compression.ZipArchive]$Archive,
+        [string]$EntryName,
+        [string]$Text
+    )
+
+    $bytes = Read-ZipBytes $Archive $EntryName
+    return [Text.Encoding]::UTF8.GetString($bytes).Contains($Text)
+}
+
 Assert-Release (Test-Path -LiteralPath $ReleaseDirectory -PathType Container) "release directory not found: $ReleaseDirectory"
 
 $properties = @{}
@@ -122,12 +133,12 @@ Assert-Release (-not [string]::IsNullOrWhiteSpace($modVersion)) 'mod_version is 
 Assert-Release (-not [string]::IsNullOrWhiteSpace($archiveName)) 'archives_name is missing from gradle.properties'
 
 $targets = @(
-    [pscustomobject]@{ Name = 'fabric-1.20.1';   Minecraft = '1.20.1'; Java = 17; Major = 61; Pack = 15; Metadata = 'fabric.mod.json';                InteractionGuard = $false; CompanionOrdering = $false },
-    [pscustomobject]@{ Name = 'fabric-1.21.1';   Minecraft = '1.21.1'; Java = 21; Major = 65; Pack = 34; Metadata = 'fabric.mod.json';                InteractionGuard = $true;  CompanionOrdering = $false },
-    [pscustomobject]@{ Name = 'forge-1.20.1';    Minecraft = '1.20.1'; Java = 17; Major = 61; Pack = 15; Metadata = 'META-INF/mods.toml';             InteractionGuard = $false; CompanionOrdering = $false },
-    [pscustomobject]@{ Name = 'forge-1.21.1';    Minecraft = '1.21.1'; Java = 21; Major = 65; Pack = 34; Metadata = 'META-INF/mods.toml';             InteractionGuard = $true;  CompanionOrdering = $false },
-    [pscustomobject]@{ Name = 'neoforge-1.20.1'; Minecraft = '1.20.1'; Java = 17; Major = 61; Pack = 15; Metadata = 'META-INF/mods.toml';             InteractionGuard = $false; CompanionOrdering = $false },
-    [pscustomobject]@{ Name = 'neoforge-1.21.1'; Minecraft = '1.21.1'; Java = 21; Major = 65; Pack = 34; Metadata = 'META-INF/neoforge.mods.toml';    InteractionGuard = $true;  CompanionOrdering = $true }
+    [pscustomobject]@{ Name = 'fabric-1.20.1';   Minecraft = '1.20.1'; Java = 17; Major = 61; Pack = 15; Metadata = 'fabric.mod.json';             InteractionGuard = $false; CompanionOrdering = $false; VanillaLeashInvoker = $false; ClientEvent = 'qizhang/playerleash/QizhangPlayerLeashClient.class';                 ClientCallback = 'onInitializeClient'; ClientRegistration = 'net/fabricmc/api/ClientModInitializer' },
+    [pscustomobject]@{ Name = 'fabric-1.21.1';   Minecraft = '1.21.1'; Java = 21; Major = 65; Pack = 34; Metadata = 'fabric.mod.json';             InteractionGuard = $true;  CompanionOrdering = $false; VanillaLeashInvoker = $true;  ClientEvent = 'qizhang/playerleash/QizhangPlayerLeashClient.class';                 ClientCallback = 'onInitializeClient'; ClientRegistration = 'net/fabricmc/api/ClientModInitializer' },
+    [pscustomobject]@{ Name = 'forge-1.20.1';    Minecraft = '1.20.1'; Java = 17; Major = 61; Pack = 15; Metadata = 'META-INF/mods.toml';          InteractionGuard = $false; CompanionOrdering = $false; VanillaLeashInvoker = $false; ClientEvent = 'qizhang/playerleash/client/ForgeLikeClientRenderEvents.class';         ClientCallback = 'onRenderLevel';       ClientRegistration = 'net/minecraftforge/fml/common/Mod$EventBusSubscriber' },
+    [pscustomobject]@{ Name = 'forge-1.21.1';    Minecraft = '1.21.1'; Java = 21; Major = 65; Pack = 34; Metadata = 'META-INF/mods.toml';          InteractionGuard = $true;  CompanionOrdering = $false; VanillaLeashInvoker = $true;  ClientEvent = 'qizhang/playerleash/client/ForgeClientRenderEvents.class';             ClientCallback = 'onRenderLevel';       ClientRegistration = 'net/minecraftforge/fml/common/Mod$EventBusSubscriber' },
+    [pscustomobject]@{ Name = 'neoforge-1.20.1'; Minecraft = '1.20.1'; Java = 17; Major = 61; Pack = 15; Metadata = 'META-INF/mods.toml';          InteractionGuard = $false; CompanionOrdering = $false; VanillaLeashInvoker = $false; ClientEvent = 'qizhang/playerleash/client/ForgeLikeClientRenderEvents.class';         ClientCallback = 'onRenderLevel';       ClientRegistration = 'net/minecraftforge/fml/common/Mod$EventBusSubscriber' },
+    [pscustomobject]@{ Name = 'neoforge-1.21.1'; Minecraft = '1.21.1'; Java = 21; Major = 65; Pack = 34; Metadata = 'META-INF/neoforge.mods.toml'; InteractionGuard = $true;  CompanionOrdering = $true;  VanillaLeashInvoker = $true;  ClientEvent = 'qizhang/playerleash/client/NeoForgeClientRenderEvents.class';          ClientCallback = 'onRenderLevel';       ClientRegistration = 'net/neoforged/fml/common/EventBusSubscriber' }
 )
 
 $jarFiles = @(Get-ChildItem -LiteralPath $ReleaseDirectory -Filter '*.jar' -File | Sort-Object Name)
@@ -141,7 +152,11 @@ $requiredEntries = @(
     'qizhang-player-leash.refmap.json',
     'qizhang/playerleash/QizhangPlayerLeash.class',
     'qizhang/playerleash/PlayerLeashManager.class',
+    'qizhang/playerleash/TamedVisualRules.class',
+    'qizhang/playerleash/client/FirstPersonLeashRenderer.class',
+    'qizhang/playerleash/client/TamedPlayerRenderer.class',
     'qizhang/playerleash/mixin/PlayerLeashMixin.class',
+    'qizhang/playerleash/mixin/client/PlayerRendererMixin.class',
     'players_tether_icon.png',
     'META-INF/LICENSE-qizhang_player_leash'
 )
@@ -168,6 +183,14 @@ foreach ($target in $targets) {
             (($entryNames -contains $interactionMixinClass) -eq $target.InteractionGuard)
         ) "$expectedName has the wrong version-specific interaction Mixin class set"
 
+        $leashInvokerClass = 'qizhang/playerleash/mixin/client/EntityRendererInvoker.class'
+        Assert-Release (
+            (($entryNames -contains $leashInvokerClass) -eq $target.VanillaLeashInvoker)
+        ) "$expectedName has the wrong version-specific leash invoker class set"
+        Assert-Release (
+            $entryNames -contains $target.ClientEvent
+        ) "$expectedName is missing its loader-specific client render bridge"
+
         $metadataText = Read-ZipText $archive $target.Metadata
         if ($target.Metadata -eq 'fabric.mod.json') {
             $fabricMetadata = $metadataText | ConvertFrom-Json
@@ -175,6 +198,9 @@ foreach ($target in $targets) {
             Assert-Release ($fabricMetadata.version -eq $modVersion) "$expectedName has the wrong Fabric mod version"
             Assert-Release ($fabricMetadata.depends.minecraft -eq "=$($target.Minecraft)") "$expectedName has the wrong Minecraft dependency"
             Assert-Release ($fabricMetadata.depends.java -eq ">=$($target.Java)") "$expectedName has the wrong Java dependency"
+            Assert-Release (
+                @($fabricMetadata.entrypoints.client) -contains 'qizhang.playerleash.QizhangPlayerLeashClient'
+            ) "$expectedName does not register its Fabric client entry point"
         }
         else {
             Assert-Release ([regex]::IsMatch($metadataText, '(?m)^\s*modId\s*=\s*"qizhang_player_leash"\s*$')) "$expectedName has the wrong Forge-family mod id"
@@ -210,14 +236,52 @@ foreach ($target in $targets) {
         Assert-Release ($mixinMetadata.refmap -eq 'qizhang-player-leash.refmap.json') "$expectedName has the wrong refmap name"
         Assert-Release ($mixinMetadata.compatibilityLevel -eq "JAVA_$($target.Java)") "$expectedName has the wrong Mixin Java level"
         $mixinNames = @($mixinMetadata.mixins)
+        $clientMixinNames = @($mixinMetadata.client)
         Assert-Release ($mixinNames -contains 'PlayerLeashMixin') "$expectedName does not register PlayerLeashMixin"
+        Assert-Release ($clientMixinNames -contains 'client.PlayerRendererMixin') "$expectedName does not register PlayerRendererMixin"
         Assert-Release (
             (($mixinNames -contains 'PlayerEntityInteractMixin') -eq $target.InteractionGuard)
         ) "$expectedName has the wrong version-specific Mixin registration set"
+        Assert-Release (
+            (($clientMixinNames -contains 'client.EntityRendererInvoker') -eq $target.VanillaLeashInvoker)
+        ) "$expectedName has the wrong version-specific client invoker registration set"
 
         Assert-Release (
             (Test-ClassText $archive 'qizhang/playerleash/QizhangPlayerLeash.class' $modVersion)
         ) "$expectedName does not expose runtime version $modVersion"
+        Assert-Release (
+            (Test-ClassText $archive 'qizhang/playerleash/PlayerLeashManager.class' 'broadcastTamingEffectToTrackingClients')
+        ) "$expectedName does not broadcast the refreshed taming effect to tracking clients"
+        Assert-Release (
+            (Test-ClassText $archive 'qizhang/playerleash/PlayerLeashManager.class' 'showsHeartParticles')
+        ) "$expectedName does not use the shared level-six heart rule"
+        Assert-Release (
+            -not (Test-ClassUtf8Text $archive 'qizhang/playerleash/PlayerLeashManager.class' '驯服效果提升到')
+        ) "$expectedName still sends duplicate layer-progress chat to the tethered player"
+        Assert-Release (
+            (Test-ClassText $archive 'qizhang/playerleash/TamedVisualRules.class' 'usesWolfModel') -and
+            (Test-ClassText $archive 'qizhang/playerleash/TamedVisualRules.class' 'showsHeartParticles')
+        ) "$expectedName is missing the shared wolf/heart visual rules"
+        Assert-Release (
+            (Test-ClassText $archive 'qizhang/playerleash/client/TamedPlayerRenderer.class' 'usesWolfModel') -and
+            (Test-ClassText $archive 'qizhang/playerleash/client/TamedPlayerRenderer.class' 'syncWolfLeashHolder')
+        ) "$expectedName does not keep the wolf proxy's tether lifecycle synchronized"
+        Assert-Release (
+            (Test-ClassText $archive 'qizhang/playerleash/client/FirstPersonLeashRenderer.class' 'shouldRenderLocalFirstPersonLeash') -and
+            (Test-ClassText $archive $target.ClientEvent 'AFTER_ENTITIES') -and
+            (Test-ClassText $archive $target.ClientEvent $target.ClientCallback) -and
+            (Test-ClassText $archive $target.ClientEvent $target.ClientRegistration)
+        ) "$expectedName is missing the first-person AFTER_ENTITIES rope path"
+        if ($target.VanillaLeashInvoker) {
+            Assert-Release (
+                (Test-ClassText $archive 'qizhang/playerleash/client/FirstPersonLeashRenderer.class' 'qizhang$renderLeash')
+            ) "$expectedName does not invoke the Minecraft 1.21.1 vanilla leash renderer"
+        }
+        else {
+            Assert-Release (
+                (Test-ClassText $archive 'qizhang/playerleash/client/FirstPersonLeashRenderer.class' 'PlayerLeashRenderer')
+            ) "$expectedName does not reuse the Minecraft 1.20.1 custom leash renderer"
+        }
         if ($target.InteractionGuard) {
             Assert-Release (
                 (Test-ClassText $archive 'qizhang/playerleash/mixin/PlayerLeashMixin.class' 'qizhang$keepElasticBeyondVanillaRange')

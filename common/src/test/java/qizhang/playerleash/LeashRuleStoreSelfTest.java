@@ -57,6 +57,19 @@ public final class LeashRuleStoreSelfTest {
         check(TamingSchedule.effectDurationSeconds(6) == 60,
                 "sixth layer must retain for 60 seconds after release");
 
+        check(!TamedVisualRules.usesWolfModel(0),
+                "first layer must keep the player model");
+        check(!TamedVisualRules.usesWolfModel(1),
+                "second layer must keep the player model");
+        check(TamedVisualRules.usesWolfModel(2),
+                "third layer must switch to the wolf model");
+        check(TamedVisualRules.usesWolfModel(5),
+                "sixth layer must keep the wolf model");
+        check(!TamedVisualRules.showsHeartParticles(4),
+                "fifth layer must not show hearts");
+        check(TamedVisualRules.showsHeartParticles(5),
+                "sixth layer must show hearts");
+
         System.out.println("LEASH_RULE_STORE_SELF_TEST=PASS");
     }
 

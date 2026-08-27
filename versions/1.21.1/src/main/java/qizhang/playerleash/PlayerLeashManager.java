@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.UUID;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundUpdateMobEffectPacket;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -176,22 +177,6 @@ final class PlayerLeashManager {
 
         Set<UUID> activeTargets = new HashSet<>();
         for (ServerPlayer target : ListSnapshot.players(currentServer)) {
-            MobEffectInstance displayedEffect = target.getEffect(QizhangPlayerLeash.tamedEffect());
-            if (displayedEffect != null
-                    && displayedEffect.getAmplifier() + 1 >= TamingSchedule.MAX_LAYERS
-                    && target.tickCount % HEART_PARTICLE_INTERVAL_TICKS == 0
-                    && target.level() instanceof ServerLevel serverLevel) {
-                serverLevel.sendParticles(
-                        ParticleTypes.HEART,
-                        target.getX(),
-                        target.getY() + 1.15D,
-                        target.getZ(),
-                        2,
-                        0.35D,
-                        0.35D,
-                        0.35D,
-                        0.01D);
-            }
             Leashable leashable = (Leashable) (Object) target;
             Entity holderEntity = leashable.getLeashHolder();
             if (holderEntity == null) {
@@ -336,22 +321,43 @@ final class PlayerLeashManager {
                     && (layerAdded || progress.continuousTicks % EFFECT_REFRESH_INTERVAL_TICKS == 0)) {
                 int duration = TamingSchedule.effectDurationSeconds(progress.layers) * 20
                         + EFFECT_REFRESH_INTERVAL_TICKS;
-                target.addEffect(new MobEffectInstance(
+                MobEffectInstance refreshedEffect = new MobEffectInstance(
                         QizhangPlayerLeash.tamedEffect(),
                         duration,
                         progress.layers - 1,
                         false,
                         false,
-                        true));
+                        true);
+                target.addEffect(refreshedEffect);
+
+                // ServerPlayer synchronizes its own effect to its own connection.
+                // The wolf-model renderer also needs the same update on every
+                // client tracking this player.
+                MobEffectInstance appliedEffect = target.getEffect(QizhangPlayerLeash.tamedEffect());
+                if (appliedEffect != null) {
+                    broadcastTamingEffectToTrackingClients(target, appliedEffect);
+                }
+            }
+
+            // This method runs every server tick. Keeping the level-six heart
+            // cadence here prevents a 20-tick policy phase from permanently
+            // missing the independent 10-tick particle phase.
+            if (TamedVisualRules.showsHeartParticles(progress.layers - 1)
+                    && target.tickCount % HEART_PARTICLE_INTERVAL_TICKS == 0
+                    && target.level() instanceof ServerLevel serverLevel) {
+                serverLevel.sendParticles(
+                        ParticleTypes.HEART,
+                        target.getX(),
+                        target.getY() + 1.15D,
+                        target.getZ(),
+                        2,
+                        0.35D,
+                        0.35D,
+                        0.35D,
+                        0.01D);
             }
 
             if (layerAdded) {
-                target.sendSystemMessage(Component.literal(
-                        "[驯服彩蛋] 驯服效果提升到 " + progress.layers + "/"
-                                + TamingSchedule.MAX_LAYERS
-                                + " 层；松开后保留约 "
-                                + TamingSchedule.effectDurationSeconds(progress.layers) + " 秒。")
-                        .withStyle(progress.layers >= 3 ? ChatFormatting.LIGHT_PURPLE : ChatFormatting.GOLD));
                 holder.sendSystemMessage(Component.literal(
                         "[驯服彩蛋] " + target.getGameProfile().getName() + " 的驯服效果达到 "
                                 + progress.layers + "/" + TamingSchedule.MAX_LAYERS + " 层。")
@@ -360,6 +366,16 @@ final class PlayerLeashManager {
 
         }
         tamingProgressByTarget.keySet().removeIf(uuid -> !activeTargets.contains(uuid));
+    }
+
+    private static void broadcastTamingEffectToTrackingClients(
+            ServerPlayer target,
+            MobEffectInstance appliedEffect) {
+        if (target.level() instanceof ServerLevel level) {
+            level.getChunkSource().broadcastAndSend(
+                    target,
+                    new ClientboundUpdateMobEffectPacket(target.getId(), appliedEffect, false));
+        }
     }
 
     private static Component error(String text) {
