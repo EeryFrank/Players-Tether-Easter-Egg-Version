@@ -36,6 +36,7 @@ deterministic load ordering and does not make either mod mandatory.
 - Creative mode neither consumes nor creates a free lead.
 - Death, logout, dimension changes, invalid holders, or a changed server rule release the tether.
 - A valid player tether remains elastic beyond vanilla's ten-block cutoff instead of snapping solely because of distance.
+- The tethered player's own first-person view renders the rope; second/third-person views keep it attached to the player or level-3 wolf proxy.
 - Cyclic player-to-player tether chains are rejected.
 
 ## Taming easter egg
@@ -52,9 +53,11 @@ Continuous tethering adds six levels of the **Tamed** effect using decreasing in
 | 6 | 5 s | 105 s |
 
 - While tethered, the effect duration is refreshed.
+- The effect is synchronized to the tethered player and all clients tracking them, so observers can render the same model state.
+- The tethered player reads the current layer from the effect HUD without duplicate progress chat; the leash holder still receives progress notifications.
 - After release, levels 1-6 remain for approximately 10/20/30/40/50/60 seconds.
 - At level 3, the player's rendered model becomes a vanilla tamed wolf. This is visual only; player data, inventory, hitbox, and permissions remain unchanged.
-- At level 6, heart particles continuously appear around the wolf until the level-6 effect expires.
+- At level 6, heart particles continuously appear around the wolf while the player remains tethered; releasing the tether stops the particles even though the effect can remain for about 60 seconds.
 
 ## Server rules
 
@@ -107,12 +110,12 @@ The complete external dependency graph, server/client boundary, and internal com
 
 ## Validation status
 
-Automated validation covers all six compilations, deterministic self-tests, loader metadata, version-specific Mixin/refmap contents, resource-pack formats, Java class versions, and release checksums. Dedicated-server smoke tests reached `Done` and shut down cleanly on all six targets; the 1.20.1 targets also reported Java 17 and accepted the direct-console status command.
+Automated validation covers all six compilations, deterministic self-tests, loader metadata, version-specific Mixin/refmap contents, resource-pack formats, Java class versions, and release checksums. Dedicated-server smoke tests reached `Done`, reported version 1.1.5, and shut down cleanly on all six targets. Client initialization reached LWJGL, sound, and texture rendering on all three 1.20.1 targets plus Fabric and NeoForge 1.21.1. Forge 1.21.1's Loom userdev client stopped in Forge's early-display module setup before mod loading; its production JAR still passed compilation, release verification, and an official Forge 52.1.0 dedicated-server smoke test.
 
-`NEEDS_MANUAL_VALIDATION`: two real clients are still required to accept player-to-player synchronization, pulling and long-distance behavior, lead rendering, wolf replacement, and heart appearance. This is especially important for the custom 1.20.1 tether renderer.
+`NEEDS_MANUAL_VALIDATION`: three real clients (holder, tethered player, and observer) are still required to accept player-to-player synchronization, pulling and long-distance behavior, the tethered player's first-/third-person rope, the observer's level-3 wolf replacement, and level-6 hearts. This is especially important for the custom 1.20.1 tether renderer.
 
 ## 中文简介
 
-该模组允许玩家使用原版拴绳拴住其他玩家，提供 Minecraft 1.20.1/1.21.1 的 Fabric、NeoForge、Forge 六个独立 JAR。默认全员可用，权限 4 管理员或本地控制台可以设置定向允许/禁止规则。连续被拴住 105 秒会叠满 6 层“驯服”：第 3 层起显示为原版狼，第 6 层持续冒爱心。服务端与所有客户端必须安装同版本、同加载器的 JAR。
+该模组允许玩家使用原版拴绳拴住其他玩家，提供 Minecraft 1.20.1/1.21.1 的 Fabric、NeoForge、Forge 六个独立 JAR。默认全员可用，权限 4 管理员或本地控制台可以设置定向允许/禁止规则。连续被拴住 105 秒会叠满 6 层“驯服”：第 3 层起显示为原版狼，第 6 层在保持拴住期间持续冒爱心。服务端与所有客户端必须安装同版本、同加载器的 JAR。
 
 完整中文安装和管理说明见 [docs/README_zh_CN.md](docs/README_zh_CN.md)。

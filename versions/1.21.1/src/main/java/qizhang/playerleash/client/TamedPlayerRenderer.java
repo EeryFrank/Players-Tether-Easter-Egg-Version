@@ -15,6 +15,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Leashable;
 import net.minecraft.world.entity.animal.Wolf;
 import qizhang.playerleash.QizhangPlayerLeash;
+import qizhang.playerleash.TamedVisualRules;
 
 public final class TamedPlayerRenderer {
     private static final Map<UUID, Wolf> WOLVES = new HashMap<>();
@@ -31,7 +32,7 @@ public final class TamedPlayerRenderer {
             MultiBufferSource buffers,
             int packedLight) {
         MobEffectInstance effect = player.getEffect(QizhangPlayerLeash.tamedEffect());
-        if (effect == null || effect.getAmplifier() < 2 || player.isInvisible()) {
+        if (effect == null || !TamedVisualRules.usesWolfModel(effect.getAmplifier()) || player.isInvisible()) {
             return false;
         }
         if (!(player.level() instanceof ClientLevel level)) {
@@ -77,16 +78,22 @@ public final class TamedPlayerRenderer {
         wolf.setInSittingPose(player.isCrouching());
         wolf.setCustomName(player.getDisplayName());
         wolf.setCustomNameVisible(true);
+        syncWolfLeashHolder(player, wolf);
+    }
 
+    private static void syncWolfLeashHolder(AbstractClientPlayer player, Wolf wolf) {
         // PlayerRenderer is cancelled while the wolf easter egg is active. Copy the
         // leash onto the visual wolf so EntityRenderer still draws the rope.
         Leashable playerLeash = (Leashable) (Object) player;
         Leashable wolfLeash = (Leashable) wolf;
         Entity holder = playerLeash.getLeashHolder();
-        if (holder != null) {
+        Entity currentHolder = wolfLeash.getLeashHolder();
+        if (holder == null) {
+            if (currentHolder != null) {
+                wolfLeash.dropLeash(false, false);
+            }
+        } else if (currentHolder != holder) {
             wolfLeash.setLeashedTo(holder, false);
-        } else if (wolfLeash.getLeashHolder() != null) {
-            wolfLeash.dropLeash(false, false);
         }
     }
 }

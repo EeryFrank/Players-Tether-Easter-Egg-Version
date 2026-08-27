@@ -10,9 +10,12 @@ import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.Wolf;
+import qizhang.playerleash.PlayerTetherAccess;
 import qizhang.playerleash.QizhangPlayerLeash;
+import qizhang.playerleash.TamedVisualRules;
 
 public final class TamedPlayerRenderer {
     private static final Map<UUID, Wolf> WOLVES = new HashMap<>();
@@ -29,7 +32,7 @@ public final class TamedPlayerRenderer {
             MultiBufferSource buffers,
             int packedLight) {
         MobEffectInstance effect = player.getEffect(QizhangPlayerLeash.tamedEffect());
-        if (effect == null || effect.getAmplifier() < 2 || player.isInvisible()) {
+        if (effect == null || !TamedVisualRules.usesWolfModel(effect.getAmplifier()) || player.isInvisible()) {
             return false;
         }
         if (!(player.level() instanceof ClientLevel level)) {
@@ -75,5 +78,21 @@ public final class TamedPlayerRenderer {
         wolf.setInSittingPose(player.isCrouching());
         wolf.setCustomName(player.getDisplayName());
         wolf.setCustomNameVisible(true);
+        syncWolfLeashHolder(player, wolf);
+    }
+
+    private static void syncWolfLeashHolder(AbstractClientPlayer player, Wolf wolf) {
+        // The wolf is a client-only render proxy and never receives the
+        // player's leash-link packet. Mirror only when the holder identity
+        // changes, and clear without broadcasting or dropping an item.
+        Entity holder = ((PlayerTetherAccess) (Object) player).qizhang$getLeashHolder();
+        Entity currentHolder = wolf.getLeashHolder();
+        if (holder == null) {
+            if (currentHolder != null) {
+                wolf.dropLeash(false, false);
+            }
+        } else if (currentHolder != holder) {
+            wolf.setLeashedTo(holder, false);
+        }
     }
 }
