@@ -1,7 +1,19 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+
 plugins {
     id "base"
     id "dev.architectury.loom" version "1.11.456" apply false
 }
+
+def packagedLegalFiles = [
+        'META-INF/LICENSE-qizhang_player_leash-LGPL-3.0-or-later.txt': file('LICENSE'),
+        'META-INF/LICENSE-qizhang_player_leash-MIT.txt': file('LICENSES/MIT.txt'),
+        'META-INF/LICENSE-qizhang_player_leash-CC-BY-SA-4.0.txt': file('LICENSES/CC-BY-SA-4.0.txt'),
+        'META-INF/LICENSE-third-party-Apache-2.0.txt': file('LICENSES/Apache-2.0.txt'),
+        'META-INF/LICENSE-POLICY-qizhang_player_leash.md': file('LICENSE_POLICY.md'),
+        'META-INF/ASSET-LICENSES-qizhang_player_leash.md': file('ASSET_LICENSES.md'),
+        'META-INF/THIRD-PARTY-NOTICES-qizhang_player_leash.md': file('THIRD_PARTY_NOTICES.md'),
+]
 
 def targetMatrix = [
         "fabric-1.21.1"  : [loader: "fabric",   loomPlatform: "fabric",   minecraft: "1.21.1", java: 21],
@@ -153,9 +165,11 @@ subprojects { targetProject ->
     }
 
     tasks.named("jar", Jar) {
-        from(rootProject.file("LICENSE")) {
-            into "META-INF"
-            rename { "LICENSE-${rootProject.mod_id}" }
+        packagedLegalFiles.each { packagedPath, sourceFile ->
+            from(sourceFile) {
+                into packagedPath.substring(0, packagedPath.lastIndexOf('/'))
+                rename { packagedPath.substring(packagedPath.lastIndexOf('/') + 1) }
+            }
         }
         manifest {
             attributes(
@@ -183,18 +197,160 @@ subprojects { targetProject ->
     }
 }
 
+tasks.register("verifyLicensing") {
+    group = "verification"
+    description = "Checks canonical license texts, file-scoped policy, SPDX coverage, asset records, and Wrapper exception."
+    inputs.files packagedLegalFiles.values()
+    inputs.files(fileTree('.') {
+        include 'common/src/**/*.java'
+        include 'versions/*/src/**/*.java'
+        include 'platforms/*/src/**/*.java'
+    })
+    inputs.files(
+            file('build.gradle'),
+            file('settings.gradle'),
+            file('gradle.properties'),
+            file('.github/workflows/build.yml'),
+            file('.github/workflows/dependency-submission.yml'),
+            file('tools/Verify-Release.ps1'),
+            file('.gitattributes'),
+            file('.gitignore'),
+            file('.reuse/dep5'),
+            fileTree('platforms') {
+                include '**/gradle.properties'
+                include '**/*.toml'
+            },
+            file('gradlew'),
+            file('gradlew.bat'),
+            file('gradle/wrapper/gradle-wrapper.jar'),
+            file('gradle/wrapper/gradle-wrapper.properties'),
+    )
+
+    doLast {
+        def sha256 = { File source ->
+            java.security.MessageDigest.getInstance('SHA-256')
+                    .digest(source.bytes).encodeHex().toString().toUpperCase(Locale.ROOT)
+        }
+
+        // Exact UTF-8/LF texts fixed for this transition.
+        def expectedLegalHashes = [
+                (file('LICENSE')): '996AF0513DF21F7496288951C41428A03C174E9E4A9D63665C57D670F845CCB1',
+                (file('LICENSES/MIT.txt')): 'D1C643C0E48132A554BDF978BB863665F6C2F2099989366DD1EEAEEF549309A4',
+                (file('LICENSES/CC-BY-SA-4.0.txt')): 'CDE7883B9050A1104F4AC19A1572AAFD6E5D7323B68351AAF51FBF4BEBA54966',
+                (file('LICENSES/Apache-2.0.txt')): '074E6E32C86A4C0EF8B3ED25B721CA23ACA83DF277CD88106EF7177C354615FF',
+        ]
+        expectedLegalHashes.each { source, expected ->
+            if (sha256(source) != expected) {
+                throw new GradleException("Canonical or preserved license text changed: ${source}")
+            }
+        }
+
+        def javaSources = fileTree('.') {
+            include 'common/src/**/*.java'
+            include 'versions/*/src/**/*.java'
+            include 'platforms/*/src/**/*.java'
+        }
+        javaSources.files.each { source ->
+            if (!source.readLines('UTF-8').take(3).contains('// SPDX-License-Identifier: LGPL-3.0-or-later')) {
+                throw new GradleException("Missing project SPDX header: ${source}")
+            }
+        }
+
+        def projectHeaderFiles = [
+                file('build.gradle'),
+                file('settings.gradle'),
+                file('gradle.properties'),
+                file('.github/workflows/build.yml'),
+                file('.github/workflows/dependency-submission.yml'),
+                file('tools/Verify-Release.ps1'),
+                file('.gitattributes'),
+                file('.gitignore'),
+        ]
+        projectHeaderFiles.addAll(fileTree('platforms') {
+            include '**/gradle.properties'
+            include '**/*.toml'
+        }.files)
+        projectHeaderFiles.addAll(fileTree('.') {
+            include '*.md'
+            include 'docs/*.md'
+            include 'art/generated/*.md'
+        }.files)
+        projectHeaderFiles.each { source ->
+            if (!source.readLines('UTF-8').take(3).any { it.contains('SPDX-License-Identifier: LGPL-3.0-or-later') }) {
+                throw new GradleException("Missing project SPDX header: ${source}")
+            }
+        }
+
+        def expectedAssets = [
+                (file('art/players-tether-icon-source.png')): '60F365BF8A51C0E8EC37014A5C32376DCA79DF21A1F21EC2E286898E2C803F1E',
+                (file('common/src/main/resources/players_tether_icon.png')): 'DE025391AEFDEE814DE509B41393F7CD21583DFC3FB9243B3A4D70AE78E51C29',
+                (file('docs/assets/players_tether_icon.png')): 'DE025391AEFDEE814DE509B41393F7CD21583DFC3FB9243B3A4D70AE78E51C29',
+                (file('art/generated/tamed-effect-source.png')): '590300FF87BA43D8E8D5F1A23875C7A5709A60D28DCFB2D732464645B0AB7AF6',
+                (file('common/src/main/resources/assets/qizhang_player_leash/textures/mob_effect/tamed.png')): '7F6FBB7CFA2F6A277EE7F1E39A4CDAD701CC2461936CD66986FF15BA69A00B46',
+        ]
+        def assetInventory = file('ASSET_LICENSES.md').getText('UTF-8')
+        expectedAssets.each { source, expected ->
+            if (sha256(source) != expected || !assetInventory.contains(expected)) {
+                throw new GradleException("Recorded asset changed without an inventory update: ${source}")
+            }
+        }
+
+        if (sha256(file('common/src/main/resources/assets/qizhang_player_leash/textures/mob_effect/tamed.png')) == 'F5F2A37E7466F2983C00550874A2A94D2D006EAE52B0E73ACB722FADEB9BDB3B') {
+            throw new GradleException('Historical Minecraft bone texture must not be redistributed')
+        }
+        if (providers.gradleProperty('mod_license').get() != 'LGPL-3.0-or-later AND MIT AND CC-BY-SA-4.0') {
+            throw new GradleException('mod_license must describe the LGPL, MIT, and CC BY-SA package components')
+        }
+        if (!file('LICENSE_POLICY.md').getText('UTF-8').contains('v1.0.0` through `v1.1.5')) {
+            throw new GradleException('Historical MIT transition boundary is missing')
+        }
+        if (!file('gradlew').getText('UTF-8').contains('https://www.apache.org/licenses/LICENSE-2.0')
+                || !file('gradlew.bat').getText('UTF-8').contains('https://www.apache.org/licenses/LICENSE-2.0')) {
+            throw new GradleException('Gradle Wrapper launch-script license notice changed')
+        }
+        if (sha256(file('gradle/wrapper/gradle-wrapper.jar')) != '7D3A4AC4DE1C32B59BC6A4EB8ECB8E612CCD0CF1AE1E99F66902DA64DF296172') {
+            throw new GradleException('Unexpected Gradle Wrapper JAR; review its license before updating')
+        }
+        if (!file('gradle/wrapper/gradle-wrapper.properties').getText('UTF-8').contains('gradle-8.14.1-bin.zip')) {
+            throw new GradleException('Gradle Wrapper version changed; update THIRD_PARTY_NOTICES.md')
+        }
+
+        def dep5 = file('.reuse/dep5').getText('UTF-8')
+        [
+                'common/src/main/resources/assets/qizhang_player_leash/lang/*.json',
+                'platforms/fabric-1.20.1/src/main/resources/fabric.mod.json',
+                'versions/1.20.1/src/main/resources/pack.mcmeta',
+                'gradle/wrapper/gradle-wrapper.jar',
+                'art/players-tether-icon-source.png',
+                'art/generated/tamed-effect-source.png',
+        ].each { boundary ->
+            if (!dep5.contains(boundary)) {
+                throw new GradleException("Machine-readable license boundary is missing from .reuse/dep5: ${boundary}")
+            }
+        }
+
+        logger.lifecycle("LICENSE_VERIFY=PASS javaSpdx=${javaSources.files.size()}/${javaSources.files.size()} projectHeaders=${projectHeaderFiles.size()}/${projectHeaderFiles.size()} assets=${expectedAssets.size()}/${expectedAssets.size()} dep5=PASS")
+    }
+}
+
 tasks.register("buildAll") {
     group = "build"
     description = "Builds and verifies all six loader/version targets."
+    dependsOn tasks.named("verifyLicensing")
     dependsOn subprojects.collect { it.tasks.named("build") }
 }
 
 tasks.register("collectReleaseJars", Sync) {
     group = "distribution"
     description = "Collects the six remapped production JARs under build/release."
+    dependsOn tasks.named("verifyLicensing")
     dependsOn subprojects.collect { it.tasks.named("remapJar") }
     into layout.buildDirectory.dir("release")
     subprojects.each { targetProject ->
         from(targetProject.tasks.named("remapJar").flatMap { it.archiveFile })
     }
+}
+
+tasks.named("check") {
+    dependsOn tasks.named("verifyLicensing")
 }

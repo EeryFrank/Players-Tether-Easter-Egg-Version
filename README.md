@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: LGPL-3.0-or-later -->
+
 # Player's Tether_Easter Egg Version
 
 ![Player's Tether_Easter Egg Version icon](docs/assets/players_tether_icon.png)
@@ -6,7 +8,7 @@ A Minecraft 1.20.1/1.21.1 mod that lets players leash other players with a norma
 
 Author: **QiZhang**
 
-License: **MIT**
+License: **LGPL-3.0-or-later for current code; existing PNG assets remain MIT.** See [license policy](LICENSE_POLICY.md).
 
 ## Supported targets
 
@@ -107,6 +109,18 @@ To build only one target, for example Fabric 1.20.1:
 ## Dependencies and code relationships
 
 The complete external dependency graph, server/client boundary, and internal component relationship diagram are documented in [Dependencies and architecture](docs/DEPENDENCIES_AND_ARCHITECTURE.md).
+
+## Licensing
+
+- Current and future project code, tests, build tooling, functional data, localization, and documentation use [`LGPL-3.0-or-later`](LICENSE).
+- The three existing project-icon PNG files remain under the historical [`MIT`](LICENSES/MIT.txt) grant and are listed with fixed hashes in [ASSET_LICENSES.md](ASSET_LICENSES.md).
+- The new original tether-effect source and 16x16 texture use [`CC-BY-SA-4.0`](LICENSES/CC-BY-SA-4.0.txt); future project-original non-branding creative assets enter that scope only after explicit inventory.
+- Gradle Wrapper files retain Apache-2.0; all other third-party content retains its own license. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+- No license grants trademark rights in the project name or official icon. Accurate attribution and compatibility references remain allowed.
+
+Versions `v1.0.0` through `v1.1.5` were released under MIT. This transition applies from the licensing-policy commit forward and does not revoke rights already granted for historical versions.
+
+The former `tamed.png` in those releases was byte-identical to Minecraft's bone texture and was not covered by the project's MIT authority. Version 1.1.6 replaces it with independently generated CC BY-SA art; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ## Validation status
 

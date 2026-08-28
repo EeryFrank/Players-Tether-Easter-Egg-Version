@@ -1,0 +1,35 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: Player's Tether_Easter Egg Version
+Source: https://github.com/EeryFrank/Players-Tether-Easter-Egg-Version
+
+Files: .reuse/dep5
+Copyright: 2026 QiZhang and contributors
+License: LGPL-3.0-or-later
+
+Files: common/src/main/resources/assets/qizhang_player_leash/lang/*.json
+       platforms/fabric-1.20.1/src/main/resources/fabric.mod.json
+       platforms/fabric-1.21.1/src/main/resources/fabric.mod.json
+       versions/1.20.1/src/main/resources/pack.mcmeta
+       versions/1.20.1/src/main/resources/*.json
+       versions/1.21.1/src/main/resources/pack.mcmeta
+       versions/1.21.1/src/main/resources/*.json
+Copyright: 2026 QiZhang and contributors
+License: LGPL-3.0-or-later
+
+Files: gradlew
+       gradlew.bat
+       gradle/wrapper/gradle-wrapper.jar
+       gradle/wrapper/gradle-wrapper.properties
+Copyright: Gradle, Inc. and contributors
+License: Apache-2.0
+
+Files: art/players-tether-icon-source.png
+       common/src/main/resources/players_tether_icon.png
+       docs/assets/players_tether_icon.png
+Copyright: 2026 QiZhang and contributors
+License: MIT
+
+Files: art/generated/tamed-effect-source.png
+       common/src/main/resources/assets/qizhang_player_leash/textures/mob_effect/tamed.png
+Copyright: 2026 QiZhang and contributors
+License: CC-BY-SA-4.0

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
+
 [CmdletBinding()]
 param(
     [string]$ReleaseDirectory
@@ -129,8 +131,10 @@ foreach ($line in Get-Content -LiteralPath (Join-Path $repositoryRoot 'gradle.pr
 
 $modVersion = $properties['mod_version']
 $archiveName = $properties['archives_name']
+$modLicense = $properties['mod_license']
 Assert-Release (-not [string]::IsNullOrWhiteSpace($modVersion)) 'mod_version is missing from gradle.properties'
 Assert-Release (-not [string]::IsNullOrWhiteSpace($archiveName)) 'archives_name is missing from gradle.properties'
+Assert-Release ($modLicense -eq 'LGPL-3.0-or-later AND MIT AND CC-BY-SA-4.0') 'mod_license does not describe the mixed package contents'
 
 $targets = @(
     [pscustomobject]@{ Name = 'fabric-1.20.1';   Minecraft = '1.20.1'; Java = 17; Major = 61; Pack = 15; Metadata = 'fabric.mod.json';             InteractionGuard = $false; CompanionOrdering = $false; VanillaLeashInvoker = $false; ClientEvent = 'qizhang/playerleash/QizhangPlayerLeashClient.class';                 ClientCallback = 'onInitializeClient'; ClientRegistration = 'net/fabricmc/api/ClientModInitializer' },
@@ -158,9 +162,31 @@ $requiredEntries = @(
     'qizhang/playerleash/mixin/PlayerLeashMixin.class',
     'qizhang/playerleash/mixin/client/PlayerRendererMixin.class',
     'players_tether_icon.png',
-    'META-INF/LICENSE-qizhang_player_leash'
+    'assets/qizhang_player_leash/textures/mob_effect/tamed.png'
 )
+$legalFiles = [ordered]@{
+    'META-INF/LICENSE-qizhang_player_leash-LGPL-3.0-or-later.txt' = (Join-Path $repositoryRoot 'LICENSE')
+    'META-INF/LICENSE-qizhang_player_leash-MIT.txt' = (Join-Path $repositoryRoot 'LICENSES/MIT.txt')
+    'META-INF/LICENSE-qizhang_player_leash-CC-BY-SA-4.0.txt' = (Join-Path $repositoryRoot 'LICENSES/CC-BY-SA-4.0.txt')
+    'META-INF/LICENSE-third-party-Apache-2.0.txt' = (Join-Path $repositoryRoot 'LICENSES/Apache-2.0.txt')
+    'META-INF/LICENSE-POLICY-qizhang_player_leash.md' = (Join-Path $repositoryRoot 'LICENSE_POLICY.md')
+    'META-INF/ASSET-LICENSES-qizhang_player_leash.md' = (Join-Path $repositoryRoot 'ASSET_LICENSES.md')
+    'META-INF/THIRD-PARTY-NOTICES-qizhang_player_leash.md' = (Join-Path $repositoryRoot 'THIRD_PARTY_NOTICES.md')
+}
+
+function Get-BytesSha256 {
+    param([byte[]]$Bytes)
+
+    $sha256 = [Security.Cryptography.SHA256]::Create()
+    try {
+        return ([BitConverter]::ToString($sha256.ComputeHash($Bytes))).Replace('-', '')
+    }
+    finally {
+        $sha256.Dispose()
+    }
+}
 $checksumLines = [Collections.Generic.List[string]]::new()
+$duplicateProgressText = -join (0x9A6F, 0x670D, 0x6548, 0x679C, 0x63D0, 0x5347, 0x5230 | ForEach-Object { [char]$_ })
 
 foreach ($target in $targets) {
     $expectedName = "$archiveName-$($target.Name)-$modVersion.jar"
@@ -170,8 +196,29 @@ foreach ($target in $targets) {
     $archive = [IO.Compression.ZipFile]::OpenRead($jar.FullName)
     try {
         $entryNames = @($archive.Entries | ForEach-Object FullName)
+        Assert-Release (($entryNames | Select-Object -Unique).Count -eq $entryNames.Count) "$expectedName has duplicate ZIP entries"
+        Assert-Release (($entryNames.ToLowerInvariant() | Select-Object -Unique).Count -eq $entryNames.Count) "$expectedName has case-insensitive duplicate ZIP entries"
+        Assert-Release (-not ($entryNames | Where-Object { $_.StartsWith('/') -or $_.Contains('../') -or $_.Contains('\\') })) "$expectedName has an unsafe ZIP path"
+        Assert-Release (-not ($entryNames | Where-Object { $_.EndsWith('.java') -or $_.Contains('/src/test/') -or $_.Contains('gradle-wrapper') -or $_.EndsWith('.jar') })) "$expectedName includes development source, Wrapper, or a nested dependency JAR"
+        foreach ($entry in $archive.Entries) {
+            if (-not [string]::IsNullOrEmpty($entry.Name)) {
+                $entryStream = $entry.Open()
+                try {
+                    $entryStream.CopyTo([IO.Stream]::Null)
+                }
+                finally {
+                    $entryStream.Dispose()
+                }
+            }
+        }
         foreach ($entryName in $requiredEntries) {
             Assert-Release ($entryNames -contains $entryName) "$expectedName is missing '$entryName'"
+        }
+        foreach ($legalEntry in $legalFiles.GetEnumerator()) {
+            Assert-Release ($entryNames -contains $legalEntry.Key) "$expectedName is missing legal entry '$($legalEntry.Key)'"
+            $jarLegalBytes = Read-ZipBytes $archive $legalEntry.Key
+            $repositoryLegalBytes = [IO.File]::ReadAllBytes($legalEntry.Value)
+            Assert-Release ((Get-BytesSha256 $jarLegalBytes) -ceq (Get-BytesSha256 $repositoryLegalBytes)) "$expectedName has a changed legal entry '$($legalEntry.Key)'"
         }
         foreach ($metadataPath in $metadataPaths) {
             $shouldExist = $metadataPath -eq $target.Metadata
@@ -192,12 +239,14 @@ foreach ($target in $targets) {
         ) "$expectedName is missing its loader-specific client render bridge"
 
         $metadataText = Read-ZipText $archive $target.Metadata
+        Assert-Release (-not $metadataText.Contains('${')) "$expectedName has an unexpanded metadata property"
         if ($target.Metadata -eq 'fabric.mod.json') {
             $fabricMetadata = $metadataText | ConvertFrom-Json
             Assert-Release ($fabricMetadata.id -eq 'qizhang_player_leash') "$expectedName has the wrong Fabric mod id"
             Assert-Release ($fabricMetadata.version -eq $modVersion) "$expectedName has the wrong Fabric mod version"
             Assert-Release ($fabricMetadata.depends.minecraft -eq "=$($target.Minecraft)") "$expectedName has the wrong Minecraft dependency"
             Assert-Release ($fabricMetadata.depends.java -eq ">=$($target.Java)") "$expectedName has the wrong Java dependency"
+            Assert-Release ($fabricMetadata.license -eq $modLicense) "$expectedName has the wrong package license"
             Assert-Release (
                 @($fabricMetadata.entrypoints.client) -contains 'qizhang.playerleash.QizhangPlayerLeashClient'
             ) "$expectedName does not register its Fabric client entry point"
@@ -208,7 +257,15 @@ foreach ($target in $targets) {
             Assert-Release ([regex]::IsMatch($metadataText, $versionPattern)) "$expectedName has the wrong Forge-family mod version"
             $minecraftPattern = '(?m)^\s*versionRange\s*=\s*"\[' + [regex]::Escape($target.Minecraft) + '\]"\s*$'
             Assert-Release ([regex]::IsMatch($metadataText, $minecraftPattern)) "$expectedName has the wrong Minecraft dependency"
+            $licensePattern = '(?m)^\s*license\s*=\s*"' + [regex]::Escape($modLicense) + '"\s*$'
+            Assert-Release ([regex]::IsMatch($metadataText, $licensePattern)) "$expectedName has the wrong package license"
         }
+
+        $packagedIconHash = Get-BytesSha256 (Read-ZipBytes $archive 'players_tether_icon.png')
+        $effectIconHash = Get-BytesSha256 (Read-ZipBytes $archive 'assets/qizhang_player_leash/textures/mob_effect/tamed.png')
+        Assert-Release ($packagedIconHash -eq 'DE025391AEFDEE814DE509B41393F7CD21583DFC3FB9243B3A4D70AE78E51C29') "$expectedName has an unrecorded packaged-icon change"
+        Assert-Release ($effectIconHash -eq '7F6FBB7CFA2F6A277EE7F1E39A4CDAD701CC2461936CD66986FF15BA69A00B46') "$expectedName has an unrecorded effect-icon change"
+        Assert-Release ($effectIconHash -ne 'F5F2A37E7466F2983C00550874A2A94D2D006EAE52B0E73ACB722FADEB9BDB3B') "$expectedName redistributes the historical Minecraft bone texture"
 
         $hasCompanionOrdering = [regex]::IsMatch(
             $metadataText,
@@ -256,7 +313,7 @@ foreach ($target in $targets) {
             (Test-ClassText $archive 'qizhang/playerleash/PlayerLeashManager.class' 'showsHeartParticles')
         ) "$expectedName does not use the shared level-six heart rule"
         Assert-Release (
-            -not (Test-ClassUtf8Text $archive 'qizhang/playerleash/PlayerLeashManager.class' '驯服效果提升到')
+            -not (Test-ClassUtf8Text $archive 'qizhang/playerleash/PlayerLeashManager.class' $duplicateProgressText)
         ) "$expectedName still sends duplicate layer-progress chat to the tethered player"
         Assert-Release (
             (Test-ClassText $archive 'qizhang/playerleash/TamedVisualRules.class' 'usesWolfModel') -and
