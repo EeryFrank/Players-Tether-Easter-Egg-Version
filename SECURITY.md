@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: LGPL-3.0-or-later -->
+
 # Security Policy
 
 Please report command-permission bypasses, arbitrary file writes, remote crashes, or player-data corruption privately to the repository owner before public disclosure.

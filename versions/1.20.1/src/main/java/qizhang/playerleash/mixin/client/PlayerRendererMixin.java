@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+
 package qizhang.playerleash.mixin.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;

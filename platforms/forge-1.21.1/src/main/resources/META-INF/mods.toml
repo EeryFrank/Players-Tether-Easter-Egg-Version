@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
+
 modLoader = "javafml"
 loaderVersion = "[52,)"
 license = "${mod_license}"

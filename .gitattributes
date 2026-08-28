@@ -1,5 +1,17 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
+
 # Disable autocrlf on generated files, they always generate with LF
 # Add any extra files or paths here to make git stop saying they
 # are changed when only line endings change.
 src/generated/**/.cache/* text eol=lf
 src/generated/**/*.json text eol=lf
+*.txt text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.mcmeta text eol=lf
+*.toml text eol=lf
+*.properties text eol=lf
+.reuse/dep5 text eol=lf
+*.png binary
+*.jar binary
+LICENSE text eol=lf

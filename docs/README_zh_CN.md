@@ -1,8 +1,10 @@
+<!-- SPDX-License-Identifier: LGPL-3.0-or-later -->
+
 # Player's Tether_Easter Egg Version 中文说明
 
 作者：**QiZhang**
 
-许可证：**MIT**
+许可证：**LGPL-3.0-or-later（代码与功能内容）+ MIT（历史项目图标）+ CC-BY-SA-4.0（原创效果图）**
 
 ## 环境与安装
 
@@ -71,6 +73,17 @@ pwsh -NoProfile -File .\tools\Verify-Release.ps1
 ```
 
 六个发布 JAR 与 `SHA256SUMS.txt` 位于 `build/release/`。单独构建某个目标可使用例如 `.\gradlew.bat :fabric-1.20.1:build`。
+
+## 开源许可
+
+- 当前及后续的项目代码、测试、构建工具、功能数据、翻译和文档采用 `LGPL-3.0-or-later`。
+- 现有 3 张项目图标 PNG 继续适用历史 MIT 授权，精确路径和哈希见 [资产许可清单](../ASSET_LICENSES.md)。
+- 新增的原创牵绊效果源图与 16x16 纹理采用 `CC-BY-SA-4.0`；后续原创、非品牌类创作资产也必须先在清单中明确登记。
+- Gradle Wrapper 保留 Apache-2.0，其他第三方内容保留各自许可证；名称和官方图标不随代码许可证授予商标权。
+
+`v1.0.0` 至 `v1.1.5` 已按 MIT 发布，既有授权不会被本次变更撤回。完整边界见 [许可证政策](../LICENSE_POLICY.md) 和 [第三方声明](../THIRD_PARTY_NOTICES.md)。
+
+这些历史版本中的旧 `tamed.png` 与 Minecraft 原版骨头纹理字节相同，并不属于项目能够按 MIT 授权的内容。1.1.6 已用独立生成的 CC BY-SA 原创效果图替换。
 
 ## 验证边界
 

@@ -1,4 +1,13 @@
+<!-- SPDX-License-Identifier: LGPL-3.0-or-later -->
+
 # Changelog
+
+## Unreleased (target: 1.1.6)
+
+- Changed current and future project code to `LGPL-3.0-or-later` while preserving the MIT grants for releases `v1.0.0` through `v1.1.5`.
+- Preserved the three historical project-icon PNG files under MIT and added explicit `CC-BY-SA-4.0` scope for recorded original non-brand assets.
+- Replaced the former `tamed.png`, which was byte-identical to Minecraft's bone texture and was never project-owned MIT content, with independently generated original chain-link art.
+- Added license-scope, asset-inventory, contribution, third-party, metadata, and release-JAR verification gates.
 
 ## 1.1.5 - 2026-08-27
 
