@@ -294,6 +294,17 @@ tasks.register("verifyLicensing") {
                 throw new GradleException("Recorded asset changed without an inventory update: ${source}")
             }
         }
+        [
+                file('art/players-tether-icon-source.png'),
+                file('art/generated/tamed-effect-source.png'),
+        ].each { source ->
+            def provenanceBytes = new String(source.bytes, java.nio.charset.StandardCharsets.ISO_8859_1)
+            ['c2pa.created', 'gpt-image', 'trainedAlgorithmicMedia', 'OpenAI Media Service API'].each { marker ->
+                if (!provenanceBytes.contains(marker)) {
+                    throw new GradleException("Generated-image provenance marker changed for ${source}: ${marker}")
+                }
+            }
+        }
 
         if (sha256(file('common/src/main/resources/assets/qizhang_player_leash/textures/mob_effect/tamed.png')) == 'F5F2A37E7466F2983C00550874A2A94D2D006EAE52B0E73ACB722FADEB9BDB3B') {
             throw new GradleException('Historical Minecraft bone texture must not be redistributed')

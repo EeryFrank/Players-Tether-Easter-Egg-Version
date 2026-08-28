@@ -8,7 +8,7 @@ A Minecraft 1.20.1/1.21.1 mod that lets players leash other players with a norma
 
 Author: **QiZhang**
 
-License: **LGPL-3.0-or-later for current code; existing PNG assets remain MIT.** See [license policy](LICENSE_POLICY.md).
+License: **LGPL-3.0-or-later for current code and functional content; MIT for three historical project icons; CC-BY-SA-4.0 for the recorded original effect art.** See [license policy](LICENSE_POLICY.md).
 
 ## Supported targets
 
