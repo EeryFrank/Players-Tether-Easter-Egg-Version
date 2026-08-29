@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: LGPL-3.0-or-later
+# SPDX-License-Identifier: GPL-3.0-only
 
 [CmdletBinding()]
 param(
@@ -134,7 +134,7 @@ $archiveName = $properties['archives_name']
 $modLicense = $properties['mod_license']
 Assert-Release (-not [string]::IsNullOrWhiteSpace($modVersion)) 'mod_version is missing from gradle.properties'
 Assert-Release (-not [string]::IsNullOrWhiteSpace($archiveName)) 'archives_name is missing from gradle.properties'
-Assert-Release ($modLicense -eq 'LGPL-3.0-or-later AND MIT AND CC-BY-SA-4.0') 'mod_license does not describe the mixed package contents'
+Assert-Release ($modLicense -eq 'GPL-3.0-only AND MIT AND CC-BY-SA-4.0') 'mod_license does not describe the mixed package contents'
 
 $targets = @(
     [pscustomobject]@{ Name = 'fabric-1.20.1';   Minecraft = '1.20.1'; Java = 17; Major = 61; Pack = 15; Metadata = 'fabric.mod.json';             InteractionGuard = $false; CompanionOrdering = $false; VanillaLeashInvoker = $false; ClientEvent = 'qizhang/playerleash/QizhangPlayerLeashClient.class';                 ClientCallback = 'onInitializeClient'; ClientRegistration = 'net/fabricmc/api/ClientModInitializer' },
@@ -165,9 +165,10 @@ $requiredEntries = @(
     'assets/qizhang_player_leash/textures/mob_effect/tamed.png'
 )
 $legalFiles = [ordered]@{
-    'META-INF/LICENSE-qizhang_player_leash-LGPL-3.0-or-later.txt' = (Join-Path $repositoryRoot 'LICENSE')
+    'META-INF/LICENSE-qizhang_player_leash-GPL-3.0-only.txt' = (Join-Path $repositoryRoot 'LICENSE')
     'META-INF/LICENSE-qizhang_player_leash-MIT.txt' = (Join-Path $repositoryRoot 'LICENSES/MIT.txt')
     'META-INF/LICENSE-qizhang_player_leash-CC-BY-SA-4.0.txt' = (Join-Path $repositoryRoot 'LICENSES/CC-BY-SA-4.0.txt')
+    'META-INF/LICENSE-qizhang_player_leash-ASSETS-PERMISSION-REQUIRED.txt' = (Join-Path $repositoryRoot 'LICENSES/LicenseRef-EeryFrank-Assets-Permission-Required.txt')
     'META-INF/LICENSE-third-party-Apache-2.0.txt' = (Join-Path $repositoryRoot 'LICENSES/Apache-2.0.txt')
     'META-INF/LICENSE-POLICY-qizhang_player_leash.md' = (Join-Path $repositoryRoot 'LICENSE_POLICY.md')
     'META-INF/ASSET-LICENSES-qizhang_player_leash.md' = (Join-Path $repositoryRoot 'ASSET_LICENSES.md')
@@ -220,6 +221,9 @@ foreach ($target in $targets) {
             $repositoryLegalBytes = [IO.File]::ReadAllBytes($legalEntry.Value)
             Assert-Release ((Get-BytesSha256 $jarLegalBytes) -ceq (Get-BytesSha256 $repositoryLegalBytes)) "$expectedName has a changed legal entry '$($legalEntry.Key)'"
         }
+        Assert-Release (-not ($entryNames -contains 'META-INF/LICENSE-qizhang_player_leash-LGPL-3.0-or-later.txt')) "$expectedName still contains the superseded current-code LGPL entry"
+        $manifestText = Read-ZipText $archive 'META-INF/MANIFEST.MF'
+        Assert-Release ($manifestText.Contains("SPDX-License-Identifier: $modLicense")) "$expectedName manifest is missing the mixed SPDX expression"
         foreach ($metadataPath in $metadataPaths) {
             $shouldExist = $metadataPath -eq $target.Metadata
             Assert-Release (($entryNames -contains $metadataPath) -eq $shouldExist) "$expectedName has an invalid loader metadata set"

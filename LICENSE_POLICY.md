@@ -1,48 +1,47 @@
-<!-- SPDX-License-Identifier: LGPL-3.0-or-later -->
+<!-- SPDX-License-Identifier: GPL-3.0-only -->
+<!-- Asset-Default-License: LicenseRef-EeryFrank-Assets-Permission-Required -->
+<!-- Historical-Grants: MIT-and-LGPL-not-revoked -->
 
 # Player's Tether license policy
 
-This file defines the license boundary for each kind of content in this repository. A more specific per-file notice takes precedence.
+This file defines the current repository's file-by-file license boundary. A more specific file notice or an explicit row in [ASSET_LICENSES.md](ASSET_LICENSES.md) takes precedence. Nothing here relicenses third-party material or withdraws a license already granted for an earlier copy.
 
-## License transition
+## Current and future project source
 
-Tags `v1.0.0` through `v1.1.5`, their release artifacts, and repository content obtained before this policy was introduced were published with an MIT License notice. Those grants remain valid for content the project had authority to license and are not revoked. They do not relicense third-party material; the historical Minecraft-texture correction is recorded in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). A copy of the historical project license is preserved at [LICENSES/MIT.txt](LICENSES/MIT.txt).
+Beginning with the commit that introduces this policy, project-authored Java source, tests, Gradle files, PowerShell tools, CI configuration, loader metadata, functional JSON/TOML, localization, documentation, and other software-oriented or functional material are licensed under `GPL-3.0-only`, unless a file says otherwise. The unmodified official GPLv3 text is in [LICENSE](LICENSE).
 
-Beginning with the commit that introduces this policy, the current and future versions use the file-scoped licenses below.
+Accepted contributions to this scope must be owned by the contributor or submitted with authority to license them under `GPL-3.0-only`. This policy does not unilaterally relicense material owned by an outside collaborator.
 
-## Project code and functional content
+## Historical MIT and LGPL grants
 
-Original Java source, tests, Gradle files, PowerShell tools, CI configuration, loader metadata, functional JSON/TOML, localization, documentation, and other software-oriented content use `LGPL-3.0-or-later`. The complete terms are in [LICENSE](LICENSE).
+Tags `v1.0.0` through `v1.1.5`, their release artifacts, and the project-owned content in those copies were distributed with an MIT notice. The preserved text is at [LICENSES/MIT.txt](LICENSES/MIT.txt). That notice never relicensed the historical Mojang texture identified in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
-A contribution to this scope is provided under `LGPL-3.0-or-later` unless the file carries a more specific notice.
+The later public baseline `1d11c9bee63f17f51b554b4413c5e82e559f7ffa` offered project-authored source and functional material under `LGPL-3.0-or-later`. Its exact text is preserved at [LICENSES/LGPL-3.0-or-later.txt](LICENSES/LGPL-3.0-or-later.txt).
 
-## Existing MIT image exceptions
+Those MIT and LGPL grants remain valid for the copies and material to which they applied. The GPL transition is prospective: it does not rewrite historical tags or releases, replace their license files, or withdraw permissions already received.
 
-The three project-icon PNG files listed in [ASSET_LICENSES.md](ASSET_LICENSES.md) already appeared in the MIT-licensed releases. They remain available under the preserved MIT License and are not reclassified as CC content by this transition.
+## Existing asset exceptions and current package expression
 
-Current production JARs contain LGPL code and functional content, an MIT project icon, and a CC BY-SA effect icon. Their package metadata uses `LGPL-3.0-or-later AND MIT AND CC-BY-SA-4.0`; this policy and the asset inventory supply the per-file interpretation.
+The three project-icon PNG files listed in [ASSET_LICENSES.md](ASSET_LICENSES.md) retain their historical MIT grants, fixed hashes, provenance record, and separate trademark boundary. They are not relicensed under GPL or the new asset LicenseRef.
 
-## Future original creative assets
+The recorded source and final tamed-effect images retain their existing `CC-BY-SA-4.0` grant. That grant is not withdrawn and is not changed into the new default. The complete terms remain at [LICENSES/CC-BY-SA-4.0.txt](LICENSES/CC-BY-SA-4.0.txt).
 
-New, project-original creative assets added after this policy use `CC-BY-SA-4.0` when they are explicitly recorded as such in `ASSET_LICENSES.md`. Eligible content includes original textures, model/animation art, fonts, sound, music, and source art under `art/**` or a loader/common resource tree such as `common/src/main/resources/assets/qizhang_player_leash/**`, with creative formats such as PNG, SVG, BBMODEL, BLEND, GLTF, GLB, OGG, WAV, FLAC, TTF, or OTF. The complete terms are in [LICENSES/CC-BY-SA-4.0.txt](LICENSES/CC-BY-SA-4.0.txt).
+Current production JARs therefore contain GPL source/functional material, an MIT project icon, and a CC BY-SA effect icon. Loader metadata uses the SPDX expression `GPL-3.0-only AND MIT AND CC-BY-SA-4.0`; the asset inventory supplies the per-file interpretation.
 
-Configuration and program files do not become CC content merely because they share an asset directory. Shader programs, `.mcmeta`, `sounds.json`, font-provider JSON, language JSON, and other functional data remain in the LGPL scope unless a specific notice says otherwise.
+## Future visual, audio, and branding assets
 
-Suggested attribution for future CC assets:
+No directory or filename automatically assigns an asset license. A future project-owned texture, model, animation, illustration, font, sound, music, logo, icon, or other branding asset must first pass a provenance, ownership, source-input, tool-terms, and written-authority review and then be explicitly added to `ASSET_LICENSES.md` with its creator, source, modifications, fixed SHA-256, and applicable terms.
 
-```text
-Player's Tether_Easter Egg Version (QiZhang and contributors)
-https://github.com/EeryFrank/Players-Tether-Easter-Egg-Version
-```
+Unless that inventory records another expressly authorized license, the asset uses `LicenseRef-EeryFrank-Assets-Permission-Required`, whose complete terms are at [LICENSES/LicenseRef-EeryFrank-Assets-Permission-Required.txt](LICENSES/LicenseRef-EeryFrank-Assets-Permission-Required.txt). It permits an unmodified asset to be used or distributed only as part of an unmodified official release package. Standalone extraction, reuse, modification, redistribution, commercial use, or branding use requires prior written permission from EeryFrank.
 
-## Name, icon, and project identity
+Configuration and program files do not become assets merely because they share a resource directory. Shader programs, `.mcmeta`, `sounds.json`, font-provider JSON, language JSON, loader metadata, and other functional data remain in the GPL scope unless a specific notice says otherwise. No current asset uses the new LicenseRef.
 
-No license in this repository grants trademark rights in the project name, its official icon, or other source identifiers, and no use may imply unauthorised endorsement. This does not restrict accurate attribution, compatibility statements, or factual reference to the project.
+## Names, icons, and project identity
 
-Paths matching `**/assets/branding/**`, and files explicitly designated as an official logo or icon, are not automatically placed under CC. Existing icon files remain distributable under their recorded MIT terms; a replacement branding asset must include explicit terms that still permit unmodified official packages and modpacks to be redistributed.
+No code or asset license grants trademark rights in the project name, official icon, or other source identifiers, and no use may imply unauthorized endorsement. Accurate attribution, compatibility statements, and factual references remain allowed.
 
-## Third-party content
+## Third-party and generated material
 
-Third-party code, tools, dependencies, assets, and quoted material retain their own licenses. They are not relicensed by being referenced from this repository. Repository-held third-party files are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+Third-party code, generated third-party files, tools, dependencies, mappings, assets, metadata, and quoted material retain their original terms. They are not relicensed by being referenced or stored here. The Gradle Wrapper remains Apache-2.0; Minecraft and official mappings remain subject to Mojang/Microsoft terms. Repository-held third-party material and the historical texture correction are described in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
-Standard license-text copies provide their respective legal terms and are not themselves reclassified by their repository path. The project-authored text in this policy, `ASSET_LICENSES.md`, `THIRD_PARTY_NOTICES.md`, and `CONTRIBUTING.md` belongs to the LGPL documentation scope above.
+Embedded C2PA/JUMBF data is provenance evidence, not a complete ownership or licensing determination. Standard license-text copies provide their respective legal terms and are not themselves reassigned by their repository path.

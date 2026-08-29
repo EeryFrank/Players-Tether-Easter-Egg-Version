@@ -1,4 +1,4 @@
-<!-- SPDX-License-Identifier: LGPL-3.0-or-later -->
+<!-- SPDX-License-Identifier: GPL-3.0-only -->
 
 # Contributing
 
@@ -14,10 +14,10 @@ Issues and pull requests are welcome.
 
 By submitting a contribution, you confirm that you have authority to provide it under the matching scope in [LICENSE_POLICY.md](LICENSE_POLICY.md):
 
-- code, tests, build/CI files, functional data, localization, and documentation under `LGPL-3.0-or-later`;
-- newly contributed original creative assets under `CC-BY-SA-4.0` only when `ASSET_LICENSES.md` records their creator, source, license, modifications, and hash;
+- code, tests, build/CI files, functional data, localization, and documentation under `GPL-3.0-only`;
+- newly contributed project-owned visual, audio, or branding assets only after a provenance, rights, and written-authorization review, an explicit `ASSET_LICENSES.md` entry, and acceptance under `LicenseRef-EeryFrank-Assets-Permission-Required` unless another license is expressly approved;
 - third-party content only under its original compatible license and with a complete notice.
 
-Do not submit decompiled Minecraft code, vanilla assets, unclear-source media, or content whose terms prohibit redistribution or modification. State the provenance and applicable terms of commissioned, collaborative, or generative-tool output in the pull request.
+Do not submit decompiled Minecraft code, vanilla assets, unclear-source media, or content whose terms prohibit the intended distribution. State the provenance, ownership, source inputs, tool terms, and applicable authorization for commissioned, collaborative, or generative-tool output in the pull request. Submission does not let the project unilaterally relicense material owned by another collaborator.
 
 Gameplay or rendering changes should include clear manual test steps for two real clients.

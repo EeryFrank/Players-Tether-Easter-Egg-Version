@@ -1,11 +1,12 @@
-<!-- SPDX-License-Identifier: LGPL-3.0-or-later -->
+<!-- SPDX-License-Identifier: GPL-3.0-only -->
 
 # Changelog
 
 ## Unreleased (target: 1.1.6)
 
-- Changed current and future project code to `LGPL-3.0-or-later` while preserving the MIT grants for releases `v1.0.0` through `v1.1.5`.
-- Preserved the three historical project-icon PNG files under MIT and added explicit `CC-BY-SA-4.0` scope for recorded original non-brand assets.
+- Changed current and future project-authored source and functional material to `GPL-3.0-only`, while preserving the MIT grants for releases `v1.0.0` through `v1.1.5` and the LGPL grant through public baseline `1d11c9bee63f17f51b554b4413c5e82e559f7ffa`.
+- Preserved the three historical project-icon PNG files under MIT and the two recorded effect-art files under their existing `CC-BY-SA-4.0` grant.
+- Added `LicenseRef-EeryFrank-Assets-Permission-Required` as the default for future project-owned visual, audio, and branding assets after explicit rights review and inventory; it does not retroactively alter existing assets.
 - Replaced the former `tamed.png`, which was byte-identical to Minecraft's bone texture and was never project-owned MIT content, with independently generated original chain-link art.
 - Added license-scope, asset-inventory, contribution, third-party, metadata, and release-JAR verification gates.
 

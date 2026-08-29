@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LGPL-3.0-or-later
+// SPDX-License-Identifier: GPL-3.0-only
 
 plugins {
     id "base"
@@ -6,9 +6,10 @@ plugins {
 }
 
 def packagedLegalFiles = [
-        'META-INF/LICENSE-qizhang_player_leash-LGPL-3.0-or-later.txt': file('LICENSE'),
+        'META-INF/LICENSE-qizhang_player_leash-GPL-3.0-only.txt': file('LICENSE'),
         'META-INF/LICENSE-qizhang_player_leash-MIT.txt': file('LICENSES/MIT.txt'),
         'META-INF/LICENSE-qizhang_player_leash-CC-BY-SA-4.0.txt': file('LICENSES/CC-BY-SA-4.0.txt'),
+        'META-INF/LICENSE-qizhang_player_leash-ASSETS-PERMISSION-REQUIRED.txt': file('LICENSES/LicenseRef-EeryFrank-Assets-Permission-Required.txt'),
         'META-INF/LICENSE-third-party-Apache-2.0.txt': file('LICENSES/Apache-2.0.txt'),
         'META-INF/LICENSE-POLICY-qizhang_player_leash.md': file('LICENSE_POLICY.md'),
         'META-INF/ASSET-LICENSES-qizhang_player_leash.md': file('ASSET_LICENSES.md'),
@@ -175,6 +176,7 @@ subprojects { targetProject ->
             attributes(
                     "Implementation-Title": rootProject.mod_name,
                     "Implementation-Version": rootProject.mod_version,
+                    "SPDX-License-Identifier": rootProject.mod_license,
                     "MixinConfigs": "qizhang-player-leash.mixins.json",
             )
         }
@@ -201,6 +203,7 @@ tasks.register("verifyLicensing") {
     group = "verification"
     description = "Checks canonical license texts, file-scoped policy, SPDX coverage, asset records, and Wrapper exception."
     inputs.files packagedLegalFiles.values()
+    inputs.file(file('LICENSES/LGPL-3.0-or-later.txt'))
     inputs.files(fileTree('.') {
         include 'common/src/**/*.java'
         include 'versions/*/src/**/*.java'
@@ -232,11 +235,13 @@ tasks.register("verifyLicensing") {
                     .digest(source.bytes).encodeHex().toString().toUpperCase(Locale.ROOT)
         }
 
-        // Exact UTF-8/LF texts fixed for this transition.
+        // Exact upstream, historical, and project-policy texts fixed for this transition.
         def expectedLegalHashes = [
-                (file('LICENSE')): '996AF0513DF21F7496288951C41428A03C174E9E4A9D63665C57D670F845CCB1',
+                (file('LICENSE')): 'FB981668C18A279E285FC4D83FBA1E836CC84DD4DAA73C9697D3CFD2D8ACA6E0',
+                (file('LICENSES/LGPL-3.0-or-later.txt')): '996AF0513DF21F7496288951C41428A03C174E9E4A9D63665C57D670F845CCB1',
                 (file('LICENSES/MIT.txt')): 'D1C643C0E48132A554BDF978BB863665F6C2F2099989366DD1EEAEEF549309A4',
                 (file('LICENSES/CC-BY-SA-4.0.txt')): 'CDE7883B9050A1104F4AC19A1572AAFD6E5D7323B68351AAF51FBF4BEBA54966',
+                (file('LICENSES/LicenseRef-EeryFrank-Assets-Permission-Required.txt')): 'A929DBAC5C7201B3E43BF186B097710B651F8B1D351BFAB39CD8308D92503CF0',
                 (file('LICENSES/Apache-2.0.txt')): '074E6E32C86A4C0EF8B3ED25B721CA23ACA83DF277CD88106EF7177C354615FF',
         ]
         expectedLegalHashes.each { source, expected ->
@@ -251,7 +256,7 @@ tasks.register("verifyLicensing") {
             include 'platforms/*/src/**/*.java'
         }
         javaSources.files.each { source ->
-            if (!source.readLines('UTF-8').take(3).contains('// SPDX-License-Identifier: LGPL-3.0-or-later')) {
+            if (!source.readLines('UTF-8').take(3).contains('// SPDX-License-Identifier: GPL-3.0-only')) {
                 throw new GradleException("Missing project SPDX header: ${source}")
             }
         }
@@ -276,7 +281,7 @@ tasks.register("verifyLicensing") {
             include 'art/generated/*.md'
         }.files)
         projectHeaderFiles.each { source ->
-            if (!source.readLines('UTF-8').take(3).any { it.contains('SPDX-License-Identifier: LGPL-3.0-or-later') }) {
+            if (!source.readLines('UTF-8').take(3).any { it.contains('SPDX-License-Identifier: GPL-3.0-only') }) {
                 throw new GradleException("Missing project SPDX header: ${source}")
             }
         }
@@ -309,11 +314,24 @@ tasks.register("verifyLicensing") {
         if (sha256(file('common/src/main/resources/assets/qizhang_player_leash/textures/mob_effect/tamed.png')) == 'F5F2A37E7466F2983C00550874A2A94D2D006EAE52B0E73ACB722FADEB9BDB3B') {
             throw new GradleException('Historical Minecraft bone texture must not be redistributed')
         }
-        if (providers.gradleProperty('mod_license').get() != 'LGPL-3.0-or-later AND MIT AND CC-BY-SA-4.0') {
-            throw new GradleException('mod_license must describe the LGPL, MIT, and CC BY-SA package components')
+        if (providers.gradleProperty('mod_license').get() != 'GPL-3.0-only AND MIT AND CC-BY-SA-4.0') {
+            throw new GradleException('mod_license must describe the GPL, MIT, and CC BY-SA package components')
         }
-        if (!file('LICENSE_POLICY.md').getText('UTF-8').contains('v1.0.0` through `v1.1.5')) {
-            throw new GradleException('Historical MIT transition boundary is missing')
+        def licensePolicy = file('LICENSE_POLICY.md').getText('UTF-8')
+        [
+                'GPL-3.0-only',
+                'LicenseRef-EeryFrank-Assets-Permission-Required',
+                'v1.0.0` through `v1.1.5',
+                '1d11c9bee63f17f51b554b4413c5e82e559f7ffa',
+        ].each { marker ->
+            if (!licensePolicy.contains(marker)) {
+                throw new GradleException("License policy is missing required boundary marker: ${marker}")
+            }
+        }
+        if (!assetInventory.contains('No current asset uses that LicenseRef')
+                || !assetInventory.contains('retain their existing [CC-BY-SA-4.0]')
+                || !assetInventory.contains('retain their historical [MIT]')) {
+            throw new GradleException('Asset inventory no longer preserves the MIT/CC/current-no-LicenseRef boundary')
         }
         if (!file('gradlew').getText('UTF-8').contains('https://www.apache.org/licenses/LICENSE-2.0')
                 || !file('gradlew.bat').getText('UTF-8').contains('https://www.apache.org/licenses/LICENSE-2.0')) {
@@ -327,6 +345,9 @@ tasks.register("verifyLicensing") {
         }
 
         def dep5 = file('.reuse/dep5').getText('UTF-8')
+        if (!dep5.contains('License: GPL-3.0-only') || dep5.contains('License: LGPL-3.0-or-later')) {
+            throw new GradleException('REUSE metadata must assign project-authored functional material to GPL-3.0-only')
+        }
         [
                 'common/src/main/resources/assets/qizhang_player_leash/lang/*.json',
                 'platforms/fabric-1.20.1/src/main/resources/fabric.mod.json',
