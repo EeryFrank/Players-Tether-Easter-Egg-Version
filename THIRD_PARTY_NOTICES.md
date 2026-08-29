@@ -1,10 +1,10 @@
-<!-- SPDX-License-Identifier: LGPL-3.0-or-later -->
+<!-- SPDX-License-Identifier: GPL-3.0-only -->
 
 # Third-party notices
 
 ## Gradle Wrapper 8.14.1
 
-The following Gradle-provided/generated files are excluded from the project's LGPL scope and retain Apache License 2.0:
+The following Gradle-provided/generated files are excluded from the project's GPL scope and retain Apache License 2.0:
 
 - `gradlew`
 - `gradlew.bat`
@@ -25,6 +25,6 @@ Version `1.1.6` removes those bytes and replaces them with independently generat
 
 The current project does not vendor Minecraft, loader, Fabric API, Forge, NeoForge, Architectury Loom, or optional companion-mod code. Build dependencies are resolved externally and retain their upstream licenses. Production verification rejects nested dependency JARs.
 
-The MIT text under `LICENSES/MIT.txt` preserves the project's own historical grant and the three current project-icon exceptions; it is not a third-party dependency notice and does not apply to the corrected Minecraft texture above.
+The MIT text under `LICENSES/MIT.txt` preserves the project's own historical grant and the three current project-icon exceptions; it is not a third-party dependency notice and does not apply to the corrected Minecraft texture above. The preserved `LICENSES/LGPL-3.0-or-later.txt` records the project's later public source grant through baseline `1d11c9bee63f17f51b554b4413c5e82e559f7ffa`; it likewise is historical project licensing, not a dependency notice.
 
-Standard LGPL, CC BY-SA, Apache, and MIT texts are fixed local copies. New third-party files must be recorded here with exact path, author, upstream URL, fixed version or revision, license, modifications, and packaging scope.
+Standard GPL, historical LGPL, CC BY-SA, Apache, and MIT texts are fixed local copies. The project asset LicenseRef is a separate policy text and does not relicense third-party material. New third-party files must be recorded here with exact path, author, upstream URL, fixed version or revision, license, modifications, and packaging scope.

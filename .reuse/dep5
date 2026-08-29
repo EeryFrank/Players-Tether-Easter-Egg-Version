@@ -4,7 +4,7 @@ Source: https://github.com/EeryFrank/Players-Tether-Easter-Egg-Version
 
 Files: .reuse/dep5
 Copyright: 2026 QiZhang and contributors
-License: LGPL-3.0-or-later
+License: GPL-3.0-only
 
 Files: common/src/main/resources/assets/qizhang_player_leash/lang/*.json
        platforms/fabric-1.20.1/src/main/resources/fabric.mod.json
@@ -14,7 +14,7 @@ Files: common/src/main/resources/assets/qizhang_player_leash/lang/*.json
        versions/1.21.1/src/main/resources/pack.mcmeta
        versions/1.21.1/src/main/resources/*.json
 Copyright: 2026 QiZhang and contributors
-License: LGPL-3.0-or-later
+License: GPL-3.0-only
 
 Files: gradlew
        gradlew.bat

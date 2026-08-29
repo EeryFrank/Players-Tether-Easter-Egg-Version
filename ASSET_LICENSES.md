@@ -1,8 +1,9 @@
-<!-- SPDX-License-Identifier: LGPL-3.0-or-later -->
+<!-- SPDX-License-Identifier: GPL-3.0-only -->
+<!-- Asset-Default-License: LicenseRef-EeryFrank-Assets-Permission-Required -->
 
 # Asset license inventory
 
-This inventory is authoritative for non-code files that need a license different from the default LGPL project scope.
+This inventory is authoritative for non-code assets outside the repository's GPL source/functional scope. A path or file extension alone never assigns an asset license.
 
 | File | SHA-256 | License | Record |
 | --- | --- | --- | --- |
@@ -12,6 +13,8 @@ This inventory is authoritative for non-code files that need a license different
 | `art/generated/tamed-effect-source.png` | `590300FF87BA43D8E8D5F1A23875C7A5709A60D28DCFB2D732464645B0AB7AF6` | `CC-BY-SA-4.0` | Original chain-link effect art generated for this project with OpenAI's built-in image generation tool on 2026-08-28, without reference images. Prompt and processing record: `art/generated/tamed-effect-prompt.md`. |
 | `common/src/main/resources/assets/qizhang_player_leash/textures/mob_effect/tamed.png` | `7F6FBB7CFA2F6A277EE7F1E39A4CDAD701CC2461936CD66986FF15BA69A00B46` | `CC-BY-SA-4.0` | 16x16 derivative of the recorded source, cropped and downscaled with nearest-neighbour sampling; replaces a historical file that was identical to Mojang's bone texture. |
 
-The historical MIT grant for the three icon files above remains available at [LICENSES/MIT.txt](LICENSES/MIT.txt). They are intentionally not moved to `CC-BY-SA-4.0` in this change. The two new effect-art files are licensed under [CC-BY-SA-4.0](LICENSES/CC-BY-SA-4.0.txt). Embedded C2PA/JUMBF signature and issuer metadata is retained as provenance evidence and is not claimed as project-original or independently relicensed.
+The three icon files retain their historical [MIT](LICENSES/MIT.txt) grants. The two effect-art files retain their existing [CC-BY-SA-4.0](LICENSES/CC-BY-SA-4.0.txt) grants. Those permissions are not withdrawn or replaced by this policy change. Embedded C2PA/JUMBF signature and issuer metadata remains provenance evidence and is not claimed as project-original or independently relicensed.
 
-`NEEDS_MANUAL_VALIDATION`: embedded provenance strings are not a signature or rights verification. Before replacing or newly relicensing an image, confirm its creator or generating account, source inputs, any generative-tool terms, Minecraft-derived elements, and authority to grant the new license. Do not describe either source image as exclusively human-made. New CC assets must be added here with creator, source, license, modification notes, and a fixed hash.
+Future project-owned visual, audio, or branding assets require a rights review and an explicit row here. Unless that row records another expressly authorized license, the asset must use [LicenseRef-EeryFrank-Assets-Permission-Required](LICENSES/LicenseRef-EeryFrank-Assets-Permission-Required.txt). That LicenseRef allows an unmodified asset to travel only inside an unmodified official release package; standalone extraction, reuse, modification, redistribution, commercial use, or branding use requires prior written permission. No current asset uses that LicenseRef.
+
+`NEEDS_MANUAL_VALIDATION`: embedded provenance strings are not a signature or rights verification. Before replacing, modifying, or newly licensing an image, confirm its creator or generating account, source inputs, applicable tool terms, Minecraft-derived elements, and authority. Do not describe either source image as exclusively human-made.

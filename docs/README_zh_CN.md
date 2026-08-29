@@ -1,10 +1,10 @@
-<!-- SPDX-License-Identifier: LGPL-3.0-or-later -->
+<!-- SPDX-License-Identifier: GPL-3.0-only -->
 
 # Player's Tether_Easter Egg Version 中文说明
 
 作者：**QiZhang**
 
-许可证：**LGPL-3.0-or-later（代码与功能内容）+ MIT（历史项目图标）+ CC-BY-SA-4.0（原创效果图）**
+许可证：**GPL-3.0-only（当前代码与功能内容）+ MIT（3 张历史项目图标）+ CC-BY-SA-4.0（2 张既有效果图）；未来新增的自有美术、音频和品牌资产默认须事先授权。**
 
 ## 环境与安装
 
@@ -76,12 +76,13 @@ pwsh -NoProfile -File .\tools\Verify-Release.ps1
 
 ## 开源许可
 
-- 当前及后续的项目代码、测试、构建工具、功能数据、翻译和文档采用 `LGPL-3.0-or-later`。
+- 当前及后续的项目代码、测试、构建工具、功能数据、翻译和文档采用 `GPL-3.0-only`。
 - 现有 3 张项目图标 PNG 继续适用历史 MIT 授权，精确路径和哈希见 [资产许可清单](../ASSET_LICENSES.md)。
-- 新增的原创牵绊效果源图与 16x16 纹理采用 `CC-BY-SA-4.0`；后续原创、非品牌类创作资产也必须先在清单中明确登记。
+- 现有牵绊效果源图与 16x16 纹理继续保留 `CC-BY-SA-4.0` 授权，不因本次政策变更而撤回。
+- 未来新增的项目自有视觉、音频或品牌资产不会自动获得开放内容许可。完成来源与权利核验并在清单登记后，若无其他明确授权，则使用 `LicenseRef-EeryFrank-Assets-Permission-Required`：未修改资产只能随未经修改的官方完整包分发，单独提取、复用、修改、再分发、商业或品牌使用须事先取得书面授权。
 - Gradle Wrapper 保留 Apache-2.0，其他第三方内容保留各自许可证；名称和官方图标不随代码许可证授予商标权。
 
-`v1.0.0` 至 `v1.1.5` 已按 MIT 发布，既有授权不会被本次变更撤回。完整边界见 [许可证政策](../LICENSE_POLICY.md) 和 [第三方声明](../THIRD_PARTY_NOTICES.md)。
+`v1.0.0` 至 `v1.1.5` 已按 MIT 发布；其后的公开基线 `1d11c9bee63f17f51b554b4413c5e82e559f7ffa` 曾将项目原创源码与功能内容按 LGPL-3.0-or-later 提供。两类既有授权都不会被本次 GPL 变更撤回。完整边界见 [许可证政策](../LICENSE_POLICY.md)、[资产许可清单](../ASSET_LICENSES.md)和[第三方声明](../THIRD_PARTY_NOTICES.md)。
 
 这些历史版本中的旧 `tamed.png` 与 Minecraft 原版骨头纹理字节相同，并不属于项目能够按 MIT 授权的内容。1.1.6 已用独立生成的 CC BY-SA 原创效果图替换。
 
